@@ -699,7 +699,8 @@ zbus_new(int argc, char* argv[]){
 		abort();
 	}
 	printf("zbus started: address(%s)\n", self->endpoint);
-	zlog("zbus started: address(%s)\n", self->endpoint);
+	if(self->verbose)
+		zlog("zbus started: address(%s)\n", self->endpoint);
 	return self;
 }
 
