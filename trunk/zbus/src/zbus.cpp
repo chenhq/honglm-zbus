@@ -659,7 +659,7 @@ zbus_new(int argc, char* argv[]){
 
 	sprintf(endpoint, "tcp://*:%s", option(argc,argv,"-p","15555"));
 	self->endpoint = zstrdup(endpoint);
-	self->verbose = atoi(option(argc,argv,"-v","1"));
+	self->verbose = atoi(option(argc,argv,"-v","3"));
 
 	self->heartbeat_liveness = atoi(option(argc,argv,"-liv","3"));
 	self->heartbeat_interval = atoi(option(argc,argv,"-int","2500"));
