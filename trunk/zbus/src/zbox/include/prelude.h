@@ -1,29 +1,11 @@
 #ifndef __ZBOX_PRELUDE_H__
-#define __ZBOX_PRELUDE_H__
+#define __ZBOX_PRELUDE_H__ 
 
-#include "zmq.h"
-#ifndef ZMQ_ROUTER
-#   define ZMQ_ROUTER       ZMQ_XREP
-#endif
-#ifndef ZMQ_DEALER
-#   define ZMQ_DEALER       ZMQ_XREQ
-#endif
-#ifndef ZMQ_DONTWAIT
-#   define ZMQ_DONTWAIT     ZMQ_NOBLOCK
+#ifdef __cplusplus
+extern "C" {
 #endif
 
-#if ZMQ_VERSION_MAJOR == 2
-#   define zmq_sendmsg      zmq_send
-#   define zmq_recvmsg      zmq_recv
 
-# 	define zframe_send(msg,s,flags) zmq_send((s),(msg),(flags))
-#	define zframe_recv(msg,s,flags) zmq_recv((s),(msg),(flags))
-#   define ZMQ_POLL_MSEC    1000        //  zmq_poll is usec
-#elif ZMQ_VERSION_MAJOR == 3 || ZMQ_VERSION_MAJOR == 4
-#   define ZMQ_POLL_MSEC    1           //  zmq_poll is msec
-#	define zframe_send zmq_msg_send
-#	define zframe_recv zmq_msg_recv
-#endif
 
 //- Establish the compiler and computer system ------------------------------
 /*
@@ -87,11 +69,14 @@
 #   define __WINDOWS__
 #   undef __MSDOS__
 #   define __MSDOS__
+#	if (defined _MSC_VER)
+#       pragma warning(disable: 4273)
+#	endif
 #   if _MSC_VER == 1500
 #       ifndef _CRT_SECURE_NO_DEPRECATE
 #           define _CRT_SECURE_NO_DEPRECATE   1
 #       endif
-#       pragma warning(disable: 4996)
+#       pragma warning(disable: 4996) 
 #   endif
 #endif
 
@@ -225,6 +210,9 @@
 #include <assert.h>
 
 //- System-specific include files -------------------------------------------
+#if defined _WIN32
+#include <winsock2.h>
+#endif
 
 #if (defined (__MSDOS__))
 #   if (defined (__WINDOWS__))
@@ -472,9 +460,9 @@ ZBOX_EXPORT void
 ZBOX_EXPORT int64_t
 	zclock_time (void);
 
+ZBOX_EXPORT char*
+	option(int argc, char* argv[], char* opt, char* default_value);
 
-ZBOX_EXPORT void
-	zlog_enable();
 ZBOX_EXPORT void
 	zlog_disable();
 ZBOX_EXPORT int
@@ -482,9 +470,7 @@ ZBOX_EXPORT int
 ZBOX_EXPORT void
 	zlog_use_stdout();
 ZBOX_EXPORT void
-	zlog_use_file();
-ZBOX_EXPORT void
-	zlog_set_log_path(char* base_path);
+	zlog_use_file(char* base_path);
 ZBOX_EXPORT FILE*
 	zlog_get_log_file();
 ZBOX_EXPORT void
@@ -515,6 +501,10 @@ ZBOX_EXPORT zthread_t
 
 ZBOX_EXPORT void
 	zthread_join(zthread_t thread);
-	
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif

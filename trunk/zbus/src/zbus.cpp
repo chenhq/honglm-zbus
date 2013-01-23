@@ -1,15 +1,17 @@
-#include "include/list.h"
-#include "include/hash.h"
+#include "zbox/include/prelude.h"
+#include "zbox/include/list.h"
+#include "zbox/include/hash.h"
+#include "zbox/include/zmsg.h"
 
 #include "zbus.h"
 
 struct _zbus_t{
-	void* 	ctx;
-	void* 	socket;
-	int 	verbose;
-	char* 	endpoint;
-	hash_t* services;
-	hash_t* workers;
+	void* 		ctx;
+	void* 		socket;
+	int 		verbose;
+	char* 		endpoint;
+	hash_t*		services;
+	hash_t*		workers;
 
 	uint64_t 	heartbeat_at;      	//  when to send HEARTBEAT
 	int 		heartbeat_liveness;
@@ -50,26 +52,11 @@ struct _worker_t{
 	char*		identity;         	//  Identity of worker
 	zframe_t*	address;          	//  Address frame to route to
 	service_t*	service;         	//  Owning service, if known
-	int64_t 	expiry;             //  Expires at unless heartbeat
-	zmsg_t*		msg_flying;			//  Message already sent via this worker
+	int64_t 	expiry;             //  Expires at unless heartbeat 
 };
 
 zbus_t *zbus = NULL;
-
-static char*
-option(int argc, char* argv[], char* opt, char* default_value){
-	int i,len;
-	char* value = default_value;
-	for(i=1; i<argc; i++){
-		len = strlen(opt);
-		if(len> strlen(argv[i])) len = strlen(argv[i]);
-		if(strncmp(argv[i],opt,len)==0){
-			value = &argv[i][len];
-		}
-	}
-	return value;
-}
-
+ 
 static uint64_t
 parse_size(char* str){
 	str = strdup(str);
@@ -127,117 +114,6 @@ hash_ctrl_t hash_ctrl_string_worker = {
 	_worker_destroy,             /* val destructor */
 };
 
-int main (int argc, char *argv []){
-	if(argc>1 && ( strcmp(argv[1],"help")==0
-			|| strcmp(argv[1],"-help")==0
-			|| strcmp(argv[1],"--help")==0
-			|| strcmp(argv[1],"-h")==0)){
-
-		printf("===============================================================================\n");
-		printf("                              zbus(%s) manual\n",ZBUS_VERSION);
-		printf("-v\tverbose mode to show message, e.g. -v0, -v1 -v3\n");
-		printf("-p\tzbus listen port, e.g. -p15555 \n");
-		printf("-log\tlog file path, e.g. -log.\n");
-		printf("-reg\tzbus worker register service token, e.g. -regxyz (xyz is token)\n");
-		printf("-adm\tzbus admin token, e.g. -admxyz (xyz is token)\n");
-		printf("-io\tzbus background io threads e.g. -io2 \n");
-		printf("-tmq\tzbus total message queue size e.g. -tmq2G \n");
-		printf("-smq\tzbus single service message queue size e.g. -smq200M \n");
-		printf("-liv\tzbus heartbeat liveness(try times) e.g. -liv3 \n");
-		printf("-int\tzbus heartbeat interval e.g. -int2500 \n");
-		printf("-wto\tzbus worker timeout e.g. -wto7500 \n");
-		printf("-mto\tzbus message timeout e.g. -mto60000 \n");
-		printf("-hwm\tzbus socket high watermark e.g. -hwm1000 \n");
-		printf("==============================================================================\n");
-		return 0;
-	}
-
-	zbus = zbus_new(argc, argv);
-	assert(zbus);
-
-	while(1){
-		zmq_pollitem_t items [] = { { zbus->socket,  0, ZMQ_POLLIN, 0 } };
-
-		int rc = zmq_poll (items, 1, zbus->heartbeat_interval * ZMQ_POLL_MSEC);
-		if (rc == -1)
-			break; //  Interrupted
-
-		if (items [0].revents & ZMQ_POLLIN) {
-			zmsg_t* msg = zmsg_recv(zbus->socket);
-			if(!msg) break; //interrupted
-
-
-			if(zbus->verbose){ //ignore heartbeat message
-				zframe_t* header = NULL, *command = NULL;
-				int idx = 0;
-				list_node_t* node = (list_node_t*)list_head(zmsg_frames(msg));
-				while(node){
-					if(idx == 2){
-						header = (zframe_t*)list_value(node);
-					} else if(idx == 3){
-						command = (zframe_t*)list_value(node);
-					} else if (idx > 3){
-						break;
-					}
-					idx++;
-					node = list_next(node);
-				}
-
-				int heartbeat = header && command && zframe_streq(header,MDPW_WORKER)
-						&& zframe_streq(command, MDPW_HEARTBEAT);
-
-				if(!heartbeat){
-					zmsg_log(msg);
-				}
-			}
-
-
-			if(zmsg_frame_size(msg)<3){
-				zlog("[ERROR]: invalid message: should be at least 3 frames\n");
-				zmsg_destroy(&msg);
-			}else{
-				zframe_t* sender = zmsg_pop_front(msg);
-				zframe_t* empty  = zmsg_pop_front(msg);
-				zframe_t* header = zmsg_pop_front(msg);
-
-				if(!zframe_streq(empty, "")){
-					zlog("[ERROR]: invalid, missing empty frame");
-					zmsg_destroy(&msg);
-				}else if(zframe_streq(header, MDPW_WORKER)){
-					//worker
-					worker_process(sender, msg);
-				}else if(zframe_streq(header, MDPC_CLIENT)){
-					//client
-					client_process(sender, msg);
-				}else if(zframe_streq(header, MDPM_MONITOR)){
-					//monitor
-					monitor_process(sender, msg);
-				}else{
-					zlog("[ERROR]: invalid, wrong  header frame ");
-					zmsg_destroy(&msg);
-				}
-				zframe_destroy(&sender);
-				zframe_destroy(&empty);
-				zframe_destroy(&header);
-			}
-		}
-
-		//heartbeating, every default of 2.5s
-		if(zclock_time() > zbus->heartbeat_at){
-			zbus_heartbeat();
-		}
-
-		//clean timeout workers if any, every default of 25s
-		if(zclock_time() > zbus->workerclean_at){
-			zbus_clean_worker();
-		}
-
-	}
-
-	zbus_destroy(&zbus);
-	return 0;
-}
-
 void
 zbus_heartbeat(){
 	zbus->heartbeat_at = zclock_time() + zbus->heartbeat_interval;
@@ -279,7 +155,7 @@ zbus_heartbeat(){
 				list_remove_node(service->workers, node);
 				hash_rem(zbus->workers, worker->identity);
 			} else {
-				worker_command(worker->address, MDPW_HEARTBEAT, NULL);
+				worker_command(worker->address, MDPW_HBT, NULL);
 			}
 			node = next_node;
 		}
@@ -304,8 +180,204 @@ zbus_clean_worker(){
 	}
 	hash_iter_destroy(&worker_iter);
 }
+static void
+s_print_help(){
+	printf("===============================================================================\n");
+	printf("                              zbus(%s) manual\n",ZBUS_VERSION);
+	printf("-v\tverbose mode to show message, e.g. -v0, -v1 -v3\n");
+	printf("-p\tzbus listen port, e.g. -p15555 \n");
+	printf("-log\tlog file path, e.g. -log.\n");
+	printf("-reg\tzbus worker register service token, e.g. -regxyz (xyz is token)\n");
+	printf("-adm\tzbus admin token, e.g. -admxyz (xyz is token)\n");
+	printf("-io\tzbus background io threads e.g. -io2 \n");
+	printf("-tmq\tzbus total message queue size e.g. -tmq2G \n");
+	printf("-smq\tzbus single service message queue size e.g. -smq200M \n");
+	printf("-liv\tzbus heartbeat liveness(try times) e.g. -liv3 \n");
+	printf("-int\tzbus heartbeat interval e.g. -int2500 \n");
+	printf("-wto\tzbus worker timeout e.g. -wto7500 \n");
+	printf("-mto\tzbus message timeout e.g. -mto60000 \n");
+	printf("-hwm\tzbus socket high watermark e.g. -hwm1000 \n");
+	printf("==============================================================================\n");
 
-void
+}
+int main (int argc, char *argv []){
+	if(argc>1 && ( strcmp(argv[1],"help")==0
+				|| strcmp(argv[1],"-help")==0
+				|| strcmp(argv[1],"--help")==0
+				|| strcmp(argv[1],"-h")==0)){
+		s_print_help();
+		return 0;
+	}
+	zbus = zbus_new(argc, argv);
+	assert(zbus);
+	
+	while(1){
+		//heartbeat, every default of 2.5s
+		if(zclock_time() > zbus->heartbeat_at){
+			zbus_heartbeat();
+		}
+		//clean timeout workers if any, every default of 25s
+		if(zclock_time() > zbus->workerclean_at){
+			zbus_clean_worker();
+		}
+
+		zmsg_t* msg = zmsg_recv(zbus->socket);
+		if(!msg) continue; //timeout
+
+		if(zbus->verbose){ //ignore heartbeat message
+			zframe_t* command = zmsg_index(msg, 3);
+			int heartbeat = 0;
+			if(command){ 
+				heartbeat = zframe_streq(command, MDPW_HBT);
+			} 
+			if(!heartbeat){
+				zmsg_log(msg);
+			}
+		}
+
+		if(zmsg_frame_size(msg)<3){
+			zlog("[ERROR]: invalid message: should be at least 3 frames\n");
+			zmsg_destroy(&msg);
+		}
+
+		zframe_t* sender = zmsg_pop_front(msg);
+		zframe_t* empty  = zmsg_pop_front(msg);
+		zframe_t* mdp = zmsg_pop_front(msg);
+		
+		if(!zframe_streq(empty, "")){
+			zlog("[ERROR]: invalid, missing empty frame");
+			zframe_destroy(&sender);
+			zframe_destroy(&empty);
+			zframe_destroy(&mdp);
+			zmsg_destroy(&msg);
+		}
+		
+		if(zframe_streq(mdp, MDPW)){//worker
+			worker_process(sender, msg);
+		}else if(zframe_streq(mdp, MDPX)){//route
+			route_process(sender, msg);
+		}else if(zframe_streq(mdp, MDPT)){//route
+			ping_process(sender, msg);
+		}else if(zframe_streq(mdp, MDPC)){//client
+			client_process(sender, msg);
+		}else if(zframe_streq(mdp, MDPQ)){//monitor
+			queue_process(sender, msg);
+		}else if(zframe_streq(mdp, MDPM)){//monitor
+			monitor_process(sender, msg);
+		}else{
+			zlog("[ERROR]: invalid, wrong mdp frame ");
+			zmsg_destroy(&msg);
+		}
+		zframe_destroy(&sender);
+		zframe_destroy(&empty);
+		zframe_destroy(&mdp);
+	}
+	zbus_destroy(&zbus);
+	return 0;
+}
+static void 
+s_mdpc_reply(zframe_t *address, char* status, char* content){
+	zmsg_t* msg = zmsg_new();
+	zmsg_wrap(msg, zframe_dup(address));
+	zmsg_push_back(msg, zframe_newstr(MDPC)); 
+	zmsg_push_back(msg, zframe_new(NULL, 0));
+	zmsg_push_back(msg, zframe_newstr(status));
+	if(content)
+		zmsg_push_back(msg, zframe_newstr(content));
+
+	zmsg_send(&msg, zbus->socket); //implicit destroy msg
+}
+
+//////////////////////////////////MDPC PROCESS///////////////////////////////
+
+//client_id:  client_id can not be destroy in this function
+//msg zmsg_t:  must be destroy in this function
+void client_process (zframe_t *client_id, zmsg_t *msg)
+{
+	if(zmsg_frame_size(msg)<2){ 
+		//invalid request just discard
+		zmsg_destroy(&msg);
+		return;
+	}
+	zframe_t* service_frame = zmsg_pop_front(msg);
+	zframe_t* token_frame	= zmsg_pop_front(msg);
+
+	//service lookup
+	char* service_name = zframe_strdup(service_frame);
+	service_t* service = (service_t*)hash_get(zbus->services,service_name);
+	zfree(service_name);
+	if(!service){
+		s_mdpc_reply(client_id, "404","service not found");
+		zmsg_destroy(&msg);
+		goto destroy;
+	}
+
+	if(service->token && !zframe_streq(token_frame, service->token)){
+		s_mdpc_reply(client_id, "403", "forbidden, wrong token");
+		zmsg_destroy(&msg);
+		goto destroy;
+	}
+
+	zmsg_wrap(msg, zframe_dup(client_id));
+	service_dispatch(service, msg);
+
+destroy:
+	zframe_destroy(&service_frame);
+	zframe_destroy(&token_frame);
+}
+
+
+static void 
+s_mdpq_reply(zframe_t *address){
+	zmsg_t* msg = zmsg_new();
+	zmsg_wrap(msg, zframe_dup(address));
+	zmsg_push_back(msg, zframe_newstr(MDPQ)); 
+	zmsg_push_back(msg, zframe_new(NULL, 0)); //empty msg_id
+	zmsg_push_back(msg, zframe_newstr("200")); 
+
+	zmsg_send(&msg, zbus->socket); //implicit destroy msg
+}
+//////////////////////////////////MDPQ PROCESS///////////////////////////////
+//sender:  client_id can not be destroy in this function
+//msg zmsg_t:  must be destroy in this function
+void queue_process (zframe_t *sender, zmsg_t *msg)
+{
+	if(zmsg_frame_size(msg)<3){ 
+		//invalid request just discard
+		zmsg_destroy(&msg);
+		return;
+	}
+	zframe_t* service_frame = zmsg_pop_front(msg);
+	zframe_t* token_frame	= zmsg_pop_front(msg);
+	zframe_t* peerid_frame = zmsg_pop_front(msg); 
+
+	//service lookup
+	char* service_name = zframe_strdup(service_frame);
+	service_t* service = (service_t*)hash_get(zbus->services,service_name);
+	zfree(service_name);
+	if(!service){
+		s_mdpc_reply(sender, "404","service not found");
+		zmsg_destroy(&msg);
+		goto destroy;
+	}
+
+	if(service->token && !zframe_streq(token_frame, service->token)){
+		s_mdpc_reply(sender, "403", "forbidden, wrong token");
+		zmsg_destroy(&msg);
+		goto destroy;
+	}
+	
+	zmsg_wrap(msg, zframe_dup(peerid_frame));
+	queue_dispatch(service, sender, msg);
+
+destroy:
+	zframe_destroy(&service_frame);
+	zframe_destroy(&token_frame);
+	zframe_destroy(&peerid_frame); 
+}
+
+//////////////////////////////////MDPW PROCESS///////////////////////////////
+void 
 worker_process (zframe_t *sender, zmsg_t *msg){
 	if(zmsg_frame_size(msg) < 1){ //invalid message
 		zmsg_destroy(&msg);
@@ -314,10 +386,9 @@ worker_process (zframe_t *sender, zmsg_t *msg){
 
 	char* worker_id = zframe_strhex(sender);
 	worker_t* worker = (worker_t*)hash_get(zbus->workers, worker_id);
+	
 	zframe_t* command = zmsg_pop_front(msg);
-
-
-	if(zframe_streq(command, MDPW_READY)){
+	if(zframe_streq(command,MDPW_REG)){
 		if(!worker){//register
 			worker = worker_new(sender);
 			worker_register(worker, msg);
@@ -332,72 +403,59 @@ worker_process (zframe_t *sender, zmsg_t *msg){
 		zlog("synchronize peer(%s)\n", worker_id);
 		worker_command(sender, MDPW_SYNC, NULL);
 		goto destroy;
-	}
-
-	//worker, right status
-	if(zframe_streq(command, MDPW_REPLY)){
-		if(worker->service->type == MODE_REQREP){
+	} 
+	 
+	if(zframe_streq(command, MDPW_REP)){ //will be deprecated
+		if(worker->service->type == MODE_LB){
 			zframe_t* client = zmsg_unwrap(msg);
 			char* svc_name = worker->service->name;
 			zmsg_push_front(msg, zframe_newstr(svc_name));
-			zmsg_push_front(msg, zframe_newstr(MDPC_CLIENT));
-			zmsg_wrap(msg, client);
+			zmsg_push_front(msg, zframe_newstr(MDPC));
+			zmsg_wrap(msg, client); 
+			zmsg_send(&msg, zbus->socket); 
 
-			zmsg_send(&msg, zbus->socket);
-			//worker idle again, enqueue to waiting list
 			worker_waiting(worker);
 		} else if(worker->service->type == MODE_MQ){
 			worker_waiting(worker);
 		}
-	} else if(zframe_streq(command, MDPW_HEARTBEAT)){
+	} else if(zframe_streq(command,MDPW_HBT)){
 		worker->expiry = zclock_time() + zbus->heartbeat_expiry;
-	} else if(zframe_streq(command, MDPW_DISCONNECT)){
+	} else if(zframe_streq(command,MDPW_DISC)){
 		worker_unregister(worker);
+	/////////////////////////////NEW API///////////////////////////
+	} else if(zframe_streq(command,MDPW_IDLE)){
+		if(worker->service->type == MODE_LB){ //broadcast mode ignored
+			worker_waiting(worker);
+		}
 	} else {
-		//ignore message
 		zlog("invalid worker message\n");
-	}
-
+	} 
 destroy:
-	zfree(worker_id);
+	zfree(worker_id); 
 	zframe_destroy(&command);
 	zmsg_destroy(&msg);
 }
 
-void
-client_process (zframe_t *sender, zmsg_t *msg){
-	if(zmsg_frame_size(msg)<2){ //fixed: changed from 3 to 2, to allow sending empty message,
-		//invalid request just discard
-		zmsg_destroy(&msg);
-		return;
-	}
-	zframe_t* service_frame = zmsg_pop_front(msg);
-	zframe_t* token_frame	= zmsg_pop_front(msg);
 
-	//service lookup
-	char* service_name = zframe_strdup(service_frame);
-	service_t* service = (service_t*)hash_get(zbus->services,service_name);
-	zfree(service_name);
-	if(!service){
-		client_command(sender, service_frame, "404","service not found");
-		zmsg_destroy(&msg);
-		goto destroy;
-	}
 
-	if(service->token && !zframe_streq(token_frame, service->token)){
-		client_command(sender, service_frame, "403","forbidden, wrong token");
-		zmsg_destroy(&msg);
-		goto destroy;
-	}
-
-	zmsg_wrap(msg, zframe_dup(sender));
-	service_dispatch(service, msg);
-
-destroy:
-	zframe_destroy(&service_frame);
-	zframe_destroy(&token_frame);
+//////////////////////////////////MDPX PROCESS///////////////////////////////
+void 
+route_process (zframe_t *sender, zmsg_t *msg){
+	//sender ignored, route to target
+	zmsg_send(&msg, zbus->socket);	
 }
+//////////////////////////////////MDPT PROCESS///////////////////////////////
+void 
+ping_process (zframe_t *sender, zmsg_t *msg){
+	zmsg_destroy(&msg);
+	msg = zmsg_new();
+	zmsg_wrap(msg, zframe_dup(sender));
+	zmsg_push_back(msg, zframe_newstr(MDPT)); 
+	zmsg_push_back(msg, zframe_new(NULL, 0)); //empty msg_id
 
+	zmsg_send(&msg, zbus->socket); //implicit destroy msg
+}
+//////////////////////////////////MDPM PROCESS///////////////////////////////
 
 worker_t*
 worker_new(zframe_t* address){
@@ -450,7 +508,7 @@ worker_register (worker_t *worker, zmsg_t *msg){
 		goto destroy;
 	}
 
-	if(type != MODE_REQREP && type != MODE_MQ && type != MODE_PUBSUB){
+	if(type != MODE_LB && type != MODE_MQ && type != MODE_BC){
 		worker_invalid(worker, "type frame wrong");
 		goto destroy;
 	}
@@ -550,69 +608,34 @@ worker_waiting (worker_t *worker){
 	list_push_back(worker->service->workers, worker);
 
 	worker->expiry = zclock_time() + zbus->heartbeat_expiry;
-	service_dispatch(worker->service, NULL);
+	service_dispatch(worker->service, NULL); 
 }
 
 void
 worker_invalid (worker_t* worker, char* reason){
 	zmsg_t* msg = zmsg_new();
 	zmsg_push_back(msg, zframe_newstr(reason));
-	worker_command (worker->address, MDPW_DISCONNECT, msg);
+	worker_command (worker->address, MDPW_DISC, msg);
 	worker_destroy(&worker);
 }
 
-
-void
-service_dispatch (service_t *service, zmsg_t *msg){
-	if(msg){
-		size_t msg_size = zmsg_content_size(msg);
-		if(zbus->mq_size + msg_size > zbus->max_tmq_size){
-			zframe_t* sender = zmsg_unwrap(msg);
-			zframe_t* svc = zframe_newstr(service->name);
-			client_command(sender, svc , "500", "Total MQ full");
-			zframe_destroy(&sender);
-			zframe_destroy(&svc);
-			zmsg_destroy(&msg);
-		}else if ((service->mq_size + msg_size) > zbus->max_smq_size){
-    		//service message queue full
-    		zframe_t* sender = zmsg_unwrap(msg);
-			zframe_t* svc = zframe_newstr(service->name);
-			client_command(sender, svc ,"500", "Single MQ full");
-			zframe_destroy(&sender);
-			zframe_destroy(&svc);
-			zmsg_destroy(&msg);
-		}else{
-			if(service->type == MODE_MQ || service->type == MODE_PUBSUB){
-				zframe_t* sender = zmsg_unwrap(msg);
-				zframe_t* svc = zframe_newstr(service->name);
-				client_command(sender, svc ,"200", "OK");
-				zframe_destroy(&svc);
-				zmsg_wrap(msg, sender);
-			}
-			service_enque_request(service, msg);
-		}
-	}
-
-	if(service->type == MODE_REQREP){
+static void
+s_service_dispatch(service_t* service){
+	assert(service); 
+	if(service->type == MODE_LB || service->type == MODE_MQ){ //TODO, remove MQ
 		while(list_size(service->workers) && list_size(service->requests)){
 			worker_t* worker = (worker_t*)list_pop_front(service->workers);
 			zmsg_t* msg = service_deque_request(service);
-			worker_command(worker->address, MDPW_REQUEST, msg);
+			worker_command(worker->address, MDPW_JOB, msg);
 		}
-	} else if(service->type == MODE_MQ){ // send 200,OK directly
-		while(list_size(service->workers) && list_size(service->requests)){
-			worker_t* worker = (worker_t*)list_pop_front(service->workers);
-			zmsg_t* msg = service_deque_request(service);
-			worker_command(worker->address, MDPW_REQUEST, msg);
-		}
-	} else if(service->type == MODE_PUBSUB){
+	} else if(service->type == MODE_BC){//broadcast
 		while(list_size(service->workers) && list_size(service->requests)){
 			zmsg_t* msg = service_deque_request(service);
 			list_node_t* node = list_head(service->workers);
 			while(node){
 				zmsg_t* msg_copy = zmsg_dup(msg);
 				worker_t* worker = (worker_t*)list_value(node);
-				worker_command(worker->address, MDPW_REQUEST, msg_copy);
+				worker_command(worker->address, MDPW_JOB, msg_copy);
 				node = list_next(node);
 			}
 			zmsg_destroy(&msg);
@@ -620,7 +643,45 @@ service_dispatch (service_t *service, zmsg_t *msg){
 	} else {
 		zlog("service type not support");
 	}
+}
 
+void
+queue_dispatch (service_t* service, zframe_t* sender, zmsg_t* msg){
+	assert(msg);
+	size_t msg_size = zmsg_content_size(msg);
+	if(zbus->mq_size + msg_size > zbus->max_tmq_size){ 
+		s_mdpc_reply(sender, "500", "Total MQ full"); 
+		zmsg_destroy(&msg);
+	}else if ((service->mq_size + msg_size) > zbus->max_smq_size){
+		//service message queue full 
+		s_mdpc_reply(sender, "500", "Single MQ full"); 
+		zmsg_destroy(&msg);
+	}else{  
+		s_mdpc_reply(sender, "200", NULL); 
+		service_enque_request(service, msg);
+	} 
+	s_service_dispatch(service);
+}
+void
+service_dispatch (service_t* service, zmsg_t* msg){
+	if(msg){
+		size_t msg_size = zmsg_content_size(msg);
+		if(zbus->mq_size + msg_size > zbus->max_tmq_size){
+			zframe_t* sender = zmsg_unwrap(msg); 
+			s_mdpc_reply(sender, "500", "Total MQ full");
+			zframe_destroy(&sender); 
+			zmsg_destroy(&msg);
+		}else if ((service->mq_size + msg_size) > zbus->max_smq_size){
+    		//service message queue full
+    		zframe_t* sender = zmsg_unwrap(msg); 
+			s_mdpc_reply(sender, "500", "Single MQ full");
+			zframe_destroy(&sender); 
+			zmsg_destroy(&msg);
+		}else{  
+			service_enque_request(service, msg);
+		}
+	} 
+	s_service_dispatch(service);
 }
 
 
@@ -678,29 +739,37 @@ zbus_new(int argc, char* argv[]){
 	self->max_smq_size = parse_size(option(argc,argv,"-smq","1G"));
 	self->mq_size = 0;
 	self->hwm = atol(option(argc,argv,"-hwm","1000"));
-	self->log = zstrdup(option(argc,argv,"-log", "."));
+	self->log = zstrdup(option(argc,argv,"-log", NULL));
 
-	zlog_set_log_path(self->log);
-
+	if(self->log){
+		zlog_use_file(self->log);
+	} else {
+		zlog_use_stdout();
+	} 
 
 	self->services = hash_new(&hash_ctrl_string_service,NULL);
 	self->workers = hash_new(&hash_ctrl_string_worker,NULL);
 
 	self->socket = zmq_socket(self->ctx, ZMQ_ROUTER);
 	assert(self->socket);
+ 
+	int sndhwm = self->hwm;
+	rc = zmq_setsockopt(self->socket, ZMQ_SNDHWM, &sndhwm, sizeof(sndhwm));
+    assert(rc == 0);
+	int rcvhwm = self->hwm;
+	rc = zmq_setsockopt(self->socket, ZMQ_RCVHWM, &rcvhwm, sizeof(rcvhwm));
+	assert(rc == 0);
 
-	//size_t len = sizeof(self->hwm);
-	//rc = zmq_setsockopt(self->socket, ZMQ_SNDHWM, &self->hwm, len);
-    //assert(rc == 0);
+	int timeout = self->heartbeat_interval;
+	rc = zmq_setsockopt(self->socket, ZMQ_RCVTIMEO, &timeout, sizeof(timeout));
+	assert(rc == 0);
 
 	rc = zmq_bind(self->socket, self->endpoint);
 	if(rc == -1){
 		printf("zbus start failed, (%s) %s", self->endpoint, zmq_strerror(zmq_errno()));
 		abort();
-	}
-	printf("zbus started: address(%s)\n", self->endpoint);
-	if(self->verbose)
-		zlog("zbus started: address(%s)\n", self->endpoint);
+	} 
+	zlog("zbus started: address(%s)\n", self->endpoint);
 	return self;
 }
 
@@ -731,45 +800,35 @@ zbus_destroy(zbus_t** self_p){
 	}
 }
 
+
+
 void
-client_command(zframe_t *address, zframe_t *service, char* status, char* content){
+worker_command (zframe_t* worker_id, char* cmd, zmsg_t* args){
+	if(!args) args = zmsg_new();  
+	zmsg_push_front(args, zframe_newstr(cmd));
+	zmsg_push_front(args, zframe_newstr(MDPW));
+	zmsg_wrap(args, zframe_dup(worker_id));
+
+	zmsg_send(&args, zbus->socket);
+}
+
+static void
+s_mdpm_reply(zframe_t *address, char* status, char* content){
 	zmsg_t* msg = zmsg_new();
 	zmsg_wrap(msg, zframe_dup(address));
-	zmsg_push_back(msg, zframe_newstr(MDPC_CLIENT));
-	zmsg_push_back(msg, zframe_dup(service));
+	zmsg_push_back(msg, zframe_newstr(MDPM));
+	zmsg_push_back(msg, zframe_new(NULL, 0)); //empty
 	zmsg_push_back(msg, zframe_newstr(status));
 	zmsg_push_back(msg, zframe_newstr(content));
 
 	zmsg_send(&msg, zbus->socket); //implicit destroy msg
 }
 
-void
-worker_command (zframe_t *address, char *command, zmsg_t *msg){
-	if(!msg)
-		msg = zmsg_new();
-
-	zmsg_push_front(msg, zframe_newstr(command));
-	zmsg_push_front(msg, zframe_newstr(MDPW_WORKER));
-	zmsg_wrap(msg, zframe_dup(address));
-
-	zmsg_send(&msg, zbus->socket);
-}
-
-void
-monitor_command(zframe_t *address, char* status, char* content){
-	zmsg_t* msg = zmsg_new();
-	zmsg_wrap(msg, zframe_dup(address));
-	zmsg_push_back(msg, zframe_newstr(MDPM_MONITOR));
-	zmsg_push_back(msg, zframe_newstr(status));
-	zmsg_push_back(msg, zframe_newstr(content));
-
-	zmsg_send(&msg, zbus->socket); //implicit destroy msg
-}
-
-void
-monitor_command_msg(zframe_t *address, char* status, zmsg_t* msg){
+static void
+s_mdpm_reply_msg(zframe_t *address, char* status, zmsg_t* msg){
 	zmsg_push_front(msg, zframe_newstr(status));
-	zmsg_push_front(msg, zframe_newstr(MDPM_MONITOR));
+	zmsg_push_front(msg, zframe_new(NULL, 0)); //empty
+	zmsg_push_front(msg, zframe_newstr(MDPM));
 	zmsg_wrap(msg, zframe_dup(address));
 	zmsg_send(&msg, zbus->socket); //implicit destroy msg
 }
@@ -783,7 +842,7 @@ service_dump(service_t *service){
 	int len = strlen(service->name) + strlen(token) + 128;
 	char* report_str = (char*) zmalloc(len);
 	//<name><token><que-size><req-count>
-	sprintf(report_str, "%s\t%d\t%s\t%lu\t%d\t%d\t%d\t%lu",
+	sprintf(report_str, "%s\t%d\t%s\t%lld\t%d\t%d\t%d\t%lld",
 			service->name,
 			service->type,
 			token,
@@ -792,7 +851,7 @@ service_dump(service_t *service){
 			(int)list_size(service->workers), //waiting worker count
 			(int)service->worker_cnt, //registered worker count
 			service->serve_at
-			);
+			); 
 	return report_str;
 }
 
@@ -811,7 +870,7 @@ monitor_cmd_ls (zframe_t *sender, zmsg_t *params){ //ls command
 			he = hash_iter_next(iter);
 		}
 		hash_iter_destroy(&iter);
-		monitor_command_msg(sender,"200", msg);
+		s_mdpm_reply_msg(sender,"200", msg);
 
 	} else if (zmsg_frame_size(params) == 1){//list specified service
 		zframe_t* service_frame = zmsg_pop_front(params);
@@ -822,17 +881,17 @@ monitor_cmd_ls (zframe_t *sender, zmsg_t *params){ //ls command
 		if(!service){
 			char content[256];
 			sprintf(content, "service( %s ), not found", service_name);
-			monitor_command(sender, "500", content);
+			s_mdpm_reply(sender, "500", content);
 		} else {
 			char* res = service_dump(service);
-			monitor_command(sender, "200", res);
+			s_mdpm_reply(sender, "200", res);
 			zfree(res);
 		}
 
 		zfree(service_name);
 		zframe_destroy(&service_frame);
 	} else {
-		monitor_command(sender, "500", "ls [service], require 0 or 1 parameter");
+		s_mdpm_reply(sender, "500", "ls [service], require 0 or 1 parameter");
 	}
 }
 
@@ -840,7 +899,7 @@ monitor_cmd_ls (zframe_t *sender, zmsg_t *params){ //ls command
 void
 monitor_cmd_clear (zframe_t *sender, zmsg_t *params){ //clear command
 	if(zmsg_frame_size(params) != 1){// clear svc
-		monitor_command(sender, "500", "clear service, require 1 parameter");
+		s_mdpm_reply(sender, "500", "clear service, require 1 parameter");
 		return;
 	}
 
@@ -852,7 +911,7 @@ monitor_cmd_clear (zframe_t *sender, zmsg_t *params){ //clear command
 	if(!service){
 		char content[256];
 		sprintf(content, "service( %s ), not found", service_name);
-		monitor_command(sender, "500", content);
+		s_mdpm_reply(sender, "500", content);
 	} else {
 		if(service->requests){
 			//destroy queued zmsgs
@@ -862,7 +921,7 @@ monitor_cmd_clear (zframe_t *sender, zmsg_t *params){ //clear command
 				msg = service_deque_request(service);
 			}
 		}
-		monitor_command(sender, "200", "OK");
+		s_mdpm_reply(sender, "200", "OK");
 	}
 
 	zfree(service_name);
@@ -872,7 +931,7 @@ monitor_cmd_clear (zframe_t *sender, zmsg_t *params){ //clear command
 void
 monitor_cmd_del (zframe_t *sender, zmsg_t *params){ //del command
 	if(zmsg_frame_size(params) != 1){// clear svc
-		monitor_command(sender, "500", "del service, require 1 parameter");
+		s_mdpm_reply(sender, "500", "del service, require 1 parameter");
 		return;
 	}
 
@@ -884,7 +943,7 @@ monitor_cmd_del (zframe_t *sender, zmsg_t *params){ //del command
 	if(!service){
 		char content[256];
 		sprintf(content, "service( %s ), not found", service_name);
-		monitor_command(sender, "500", content);
+		s_mdpm_reply(sender, "500", content);
 	} else {
 		zlog("(-) unregister service(%s)\n", service_name);
 		list_node_t* node = list_head(service->workers);
@@ -892,12 +951,12 @@ monitor_cmd_del (zframe_t *sender, zmsg_t *params){ //del command
 			worker_t* worker = (worker_t*) list_value(node);
 			zmsg_t* msg = zmsg_new();
 			zmsg_push_back(msg, zframe_newstr("service is going to be destroyed by broker"));
-			worker_command (worker->address, MDPW_DISCONNECT, msg); //disconnect worker
+			worker_command (worker->address, MDPW_DISC, msg); //disconnect worker
 			worker_unregister(worker);
 			node = list_next(node);
 		}
 		hash_rem(zbus->services, service_name);
-		monitor_command(sender, "200", "OK");
+		s_mdpm_reply(sender, "200", "OK");
 	}
 
 	zfree(service_name);
@@ -914,7 +973,7 @@ monitor_cmd_msg (zframe_t *sender, zmsg_t *params){ //msg command
 void
 monitor_cmd_reg (zframe_t *sender, zmsg_t *params){ //msg command
 	if(zmsg_frame_size(params) != 3){// clear svc
-		monitor_command(sender, "500", "reg <service> <token> <type>, require 3 parameter");
+		s_mdpm_reply(sender, "500", "reg <service> <token> <type>, require 3 parameter");
 		return;
 	}
 
@@ -933,19 +992,19 @@ monitor_cmd_reg (zframe_t *sender, zmsg_t *params){ //msg command
 	if(service){
 		char content[256];
 		sprintf(content, "service( %s ) already exists", service_name);
-		monitor_command(sender, "500", content);
+		s_mdpm_reply(sender, "500", content);
 		goto destroy;
 	}
 
-	if(type != MODE_REQREP && type != MODE_MQ && type != MODE_PUBSUB){
-		monitor_command(sender, "500", "type (1,2 or 3) wrong");
+	if(type != MODE_LB && type != MODE_MQ && type != MODE_BC){
+		s_mdpm_reply(sender, "500", "type (1,2 or 3) wrong");
 		goto destroy;
 	}
 
 	service = service_new(service_frame, token_frame, type);
 	hash_put(zbus->services, service_name, service);
 	zlog ("(+) register service(%s)\n", service_name);
-	monitor_command(sender, "200", "OK");
+	s_mdpm_reply(sender, "200", "OK");
 destroy:
 	zfree(service_name);
 	zframe_destroy(&service_frame);
@@ -969,7 +1028,7 @@ monitor_process (zframe_t *sender, zmsg_t *msg){
 	zframe_t* cmd_frame = zmsg_pop_front(msg);
 
 	if(zbus->admin_token && !zframe_streq(token_frame, zbus->admin_token)){
-		monitor_command(sender, "403", "wrong administrator token");
+		s_mdpm_reply(sender, "403", "wrong administrator token");
 		goto destroy;
 	}
 
@@ -984,7 +1043,7 @@ monitor_process (zframe_t *sender, zmsg_t *msg){
 	} else if(zframe_streq(cmd_frame, "reg")){
 		monitor_cmd_reg(sender, msg);
 	} else {
-		monitor_command(sender, "404", "unknown command");
+		s_mdpm_reply(sender, "404", "unknown command");
 	}
 
 destroy:

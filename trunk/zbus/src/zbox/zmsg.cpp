@@ -1,11 +1,36 @@
-#include "../include/prelude.h"
-#include "../include/list.h"
-#include "../include/zmsg.h"   
+#include "include/prelude.h"
+#include "include/list.h"
+#include "include/zmsg.h"   
+
+#include "../include/zmq.h"
+
+#if ZMQ_VERSION_MAJOR == 2
+#   define zmq_sendmsg      zmq_send
+#   define zmq_recvmsg      zmq_recv
+
+# 	define zframe_send(msg,s,flags) zmq_send((s),(msg),(flags))
+#	define zframe_recv(msg,s,flags) zmq_recv((s),(msg),(flags))
+#   define ZMQ_POLL_MSEC    1000        //  zmq_poll is usec
+#elif ZMQ_VERSION_MAJOR == 3 || ZMQ_VERSION_MAJOR == 4
+#   define ZMQ_POLL_MSEC    1           //  zmq_poll is msec
+#	define zframe_send zmq_msg_send
+#	define zframe_recv zmq_msg_recv
+#endif
 
 struct _zmsg_t {
     list_t* frames;            //  List of frames
     size_t  content_size;      //  Total content size
 };
+
+size_t 
+zframe_size (zframe_t* self){
+	return zmq_msg_size(self);
+}
+
+void *
+zframe_data (zframe_t* self){
+	return zmq_msg_data(self);
+}
 
 zframe_t*
 zframe_new(const void *data, size_t size){
@@ -488,4 +513,15 @@ zctx_destroy(void** self_p){
 #endif
 		*self_p = NULL;
 	}
+}
+ 
+zframe_t* 
+zmsg_index (zmsg_t *self, int index){
+	assert(self); 
+	list_node_t* node = list_head(self->frames);
+	int i = 0;
+	while(node && i++<index){
+		node = list_next(node);
+	}
+	return node? (zframe_t*)list_value(node): NULL;
 }

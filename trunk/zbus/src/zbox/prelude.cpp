@@ -1,5 +1,4 @@
-#include "../include/prelude.h"
-
+#include "include/prelude.h"
 
 #if (defined (__WINDOWS__)) 
 
@@ -25,6 +24,19 @@ int random() {
  
 
 
+char*
+option(int argc, char* argv[], char* opt, char* default_value){
+	int i,len;
+	char* value = default_value;
+	for(i=1; i<argc; i++){
+		len = strlen(opt);
+		if(len> strlen(argv[i])) len = strlen(argv[i]);
+		if(strncmp(argv[i],opt,len)==0){
+			value = &argv[i][len];
+		}
+	}
+	return value;
+}
 
 
 ///////////////////////////////MEMORY ALLOCATION//////////////////////////
@@ -208,7 +220,7 @@ zthread_new (thread_fn func, void *args){
 
 #if defined (__UNIX__)
 	pthread_create (&thread, NULL, s_thread_params, params);
-	pthread_detach (thread);
+	//pthread_detach (thread);
 
 #elif defined (__WINDOWS__)
 	thread = (zthread_t)_beginthreadex(
@@ -299,7 +311,7 @@ int	  g_log_enabled = 1;
 char  g_log_path[256] = {'.'};
 int   g_log_date = 0;
 FILE* g_log_file = NULL;
-int   g_log_stdout = 0;
+int   g_log_stdout = 1;
 
 
 void
@@ -318,16 +330,13 @@ zlog_enabled(){
 }
 void
 zlog_use_stdout(){
+	g_log_enabled = 1;
 	g_log_stdout = 1;
 }
 void
-zlog_use_file(){
+zlog_use_file(char* base_path){
+	g_log_enabled = 1;
 	g_log_stdout = 0;
-}
-
-
-void
-zlog_set_log_path(char* base_path){
 	strcpy(g_log_path, base_path);
 }
 

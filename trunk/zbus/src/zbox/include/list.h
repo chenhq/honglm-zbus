@@ -3,12 +3,22 @@
  */
 
 #ifndef __ZBOX_LIST_H__
-#define __ZBOX_LIST_H__
-#include "prelude.h"
+#define __ZBOX_LIST_H__ 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if (defined (__WINDOWS__))
+#   if defined DLL_EXPORT
+#       define ZBOX_EXPORT __declspec(dllexport)
+#   else
+#       define ZBOX_EXPORT __declspec(dllimport)
+#   endif
+#else
+#   define ZBOX_EXPORT
+#endif
+
 
 typedef struct _list_node_t {
     struct _list_node_t *prev;

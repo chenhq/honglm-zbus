@@ -1,7 +1,9 @@
 #ifndef __ZBOX_ZMSG_H_INCLUDED__
-#define __ZBOX_ZMSG_H_INCLUDED__
+#define __ZBOX_ZMSG_H_INCLUDED__ 
 
-#include "zmq.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if (defined (__WINDOWS__))
 #   if defined DLL_EXPORT
@@ -12,18 +14,16 @@
 #else
 #   define ZBOX_EXPORT
 #endif
- 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-#define zframe_size	zmq_msg_size
-#define zframe_data zmq_msg_data
 
 typedef struct _zmsg_t zmsg_t;
-typedef zmq_msg_t zframe_t;
+typedef struct zmq_msg_t zframe_t;
+
+ZBOX_EXPORT size_t 
+	zframe_size (zframe_t* self);
+
+ZBOX_EXPORT void *
+	zframe_data (zframe_t* self);
 
 ZBOX_EXPORT void*
 	zctx_new(int io_threads);
@@ -123,8 +123,7 @@ ZBOX_EXPORT zframe_t *
 
 ZBOX_EXPORT zframe_t*
 	zmsg_frame(zmsg_t* self, int index);
-ZBOX_EXPORT list_t*
-	zmsg_frames(zmsg_t* self);
+
 //  Print message to stderr, for debugging
 ZBOX_EXPORT void
     zmsg_dump (zmsg_t *self);
@@ -133,6 +132,8 @@ ZBOX_EXPORT void
 	zmsg_log (zmsg_t *self);
 
 
+ZBOX_EXPORT zframe_t*
+	zmsg_index (zmsg_t *self, int index);
 
 void
 	zmsg_test ();

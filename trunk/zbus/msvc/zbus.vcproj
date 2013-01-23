@@ -931,30 +931,22 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<Filter
-				Name="include"
+				Name="zbox"
 				>
 				<File
-					RelativePath="..\src\include\hash.h"
+					RelativePath="..\src\zbox\include\hash.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\include\list.h"
+					RelativePath="..\src\zbox\include\list.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\include\prelude.h"
+					RelativePath="..\src\zbox\include\prelude.h"
 					>
 				</File>
 				<File
-					RelativePath="..\src\include\zmq.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\include\zmq_utils.h"
-					>
-				</File>
-				<File
-					RelativePath="..\src\include\zmsg.h"
+					RelativePath="..\src\zbox\include\zmsg.h"
 					>
 				</File>
 			</Filter>

@@ -1,9 +1,5 @@
-/*
- * A generic doubly linked list implementation
- */
-
-#include "../include/prelude.h"
-#include "../include/list.h" 
+#include "include/prelude.h"
+#include "include/list.h" 
 
 
 list_t *

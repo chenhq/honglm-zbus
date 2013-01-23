@@ -1,5 +1,5 @@
-#include "../include/prelude.h"
-#include "../include/hash.h"
+#include "include/prelude.h"
+#include "include/hash.h"
 
 /* ----------------------- StringCopy Hash Table Type ------------------------*/
 unsigned int
