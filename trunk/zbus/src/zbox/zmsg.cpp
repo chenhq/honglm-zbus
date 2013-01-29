@@ -362,7 +362,7 @@ zmsg_frame (zmsg_t *self, int index){
 	return frame;
 }
 
-list_t* zmsg_frames(zmsg_t* self){
+void* zmsg_frames(zmsg_t* self){
 	return self->frames;
 }
 
@@ -423,7 +423,7 @@ zmsg_log(zmsg_t* self){
 	strftime (formatted, 32, "%Y-%m-%d %H:%M:%S ", loctime);
 	fprintf (file, "%s\n", formatted);
 	fprintf (file, "--------------------------------------\n");
-	list_iter_t* iter = list_iter_new(zmsg_frames(self), LIST_ITER_FORWARD);
+	list_iter_t* iter = list_iter_new((list_t*)zmsg_frames(self), LIST_ITER_FORWARD);
 	zframe_t* frame = (zframe_t*)list_iter_next(iter);
 	while(frame){
 		zframe_log(frame);

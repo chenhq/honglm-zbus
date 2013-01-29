@@ -13,19 +13,19 @@ struct _zbus_t{
 	hash_t*		services;
 	hash_t*		workers;
 
-	uint64_t 	heartbeat_at;      	//  when to send HEARTBEAT
+	int64_t 	heartbeat_at;      	//  when to send HEARTBEAT
 	int 		heartbeat_liveness;
 	int 		heartbeat_interval;	//	msecs
 	int			heartbeat_expiry;
 
-	uint64_t 	msgclean_at;      	//  when to clean message
-	uint64_t    workerclean_at;
+	int64_t 	msgclean_at;      	//  when to clean message
+	int64_t     workerclean_at;
     int			worker_timeout;
     int			msg_timeout;
 
-	uint64_t	max_tmq_size; //total MQ size
-	uint64_t 	max_smq_size; //single service MQ size
-	uint64_t	mq_size;
+	int64_t		max_tmq_size; //total MQ size
+	int64_t 	max_smq_size; //single service MQ size
+	int64_t		mq_size;
 
 	int64_t	    hwm;		  //high watermark of socket
 
@@ -40,8 +40,8 @@ struct _service_t{
 	list_t *	requests;          	//  List of client requests
 	list_t *	workers;           	//  List of waiting workers
 
-	uint64_t    serve_at;
-	uint64_t	mq_size;
+	int64_t     serve_at;
+	int64_t		mq_size;
 	size_t		worker_cnt;         //  Registered worker count
 	char* 		token;				//  Token authorised to call this service
 	int			type;				//  Service type
@@ -57,7 +57,7 @@ struct _worker_t{
 
 zbus_t *zbus = NULL;
  
-static uint64_t
+static int64_t
 parse_size(char* str){
 	str = strdup(str);
 	int len = strlen(str);
@@ -224,32 +224,47 @@ int main (int argc, char *argv []){
 		zmsg_t* msg = zmsg_recv(zbus->socket);
 		if(!msg) continue; //timeout
 
-		if(zbus->verbose){ //ignore heartbeat message
-			zframe_t* command = zmsg_index(msg, 3);
-			int heartbeat = 0;
-			if(command){ 
-				heartbeat = zframe_streq(command, MDPW_HBT);
-			} 
-			if(!heartbeat){
-				zmsg_log(msg);
-			}
-		}
-
 		if(zmsg_frame_size(msg)<3){
 			zlog("[ERROR]: invalid message: should be at least 3 frames\n");
+			if(zbus->verbose){
+				zmsg_log(msg);
+			}
 			zmsg_destroy(&msg);
+			continue;
+		}  
+		
+		if(zbus->verbose){ //ignore heartbeat and probe message
+			int ignore = 0, idx = 0;
+			zframe_t* hbt = NULL, *mdp = NULL;
+			list_node_t* node = list_head((list_t*)zmsg_frames(msg));
+			while(node){ 
+				if(idx == 2) mdp = (zframe_t*)list_value(node);
+				if(idx == 3){
+					hbt = (zframe_t*)list_value(node);
+					break;
+				}
+				node = list_next(node);
+				idx ++;
+			}
+			if(hbt && zframe_streq(hbt, MDPW_HBT)) ignore = 1;
+			if(mdp && zframe_streq(mdp, MDPT)) ignore = 1;			
+			
+			if(!ignore) {
+				zmsg_log(msg);
+			}
 		}
 
 		zframe_t* sender = zmsg_pop_front(msg);
 		zframe_t* empty  = zmsg_pop_front(msg);
 		zframe_t* mdp = zmsg_pop_front(msg);
-		
+
 		if(!zframe_streq(empty, "")){
 			zlog("[ERROR]: invalid, missing empty frame");
 			zframe_destroy(&sender);
 			zframe_destroy(&empty);
 			zframe_destroy(&mdp);
 			zmsg_destroy(&msg);
+			continue;
 		}
 		
 		if(zframe_streq(mdp, MDPW)){//worker

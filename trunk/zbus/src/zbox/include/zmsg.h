@@ -123,7 +123,8 @@ ZBOX_EXPORT zframe_t *
 
 ZBOX_EXPORT zframe_t*
 	zmsg_frame(zmsg_t* self, int index);
-
+ZBOX_EXPORT void* 
+	zmsg_frames(zmsg_t* self);
 //  Print message to stderr, for debugging
 ZBOX_EXPORT void
     zmsg_dump (zmsg_t *self);

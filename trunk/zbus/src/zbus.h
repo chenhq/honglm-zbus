@@ -10,7 +10,7 @@
 #include "include/zmq.h"
 #include "zbox/include/zmsg.h"
 
-#define ZBUS_VERSION		"v20130113"
+#define ZBUS_VERSION		"v20130129"
  
 //the following three will be removed
 #define MODE_MQ		2 
