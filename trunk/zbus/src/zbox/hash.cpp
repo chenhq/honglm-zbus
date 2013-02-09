@@ -102,6 +102,17 @@ _hash_reset(hash_table_t *ht){
     ht->used = 0;
 }
 
+/* Hash table types */
+
+hash_ctrl_t hash_ctrl_copy_key_string = {
+	hash_func_string,           /* hash function */
+	hash_dup_string,            /* key dup */
+	NULL,                       /* val dup */
+	hash_cmp_string,   			/* key compare */
+	hash_destroy_string,        /* key destructor */
+	NULL                        /* val destructor */
+};
+ 
 /* Create a new hash table */
 hash_t *
 hash_new(hash_ctrl_t *type, void *privdata) {
@@ -664,4 +675,3 @@ hash_disable_resize(void) {
     dict_can_resize = 0;
 }
 
- 

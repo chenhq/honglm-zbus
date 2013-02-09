@@ -157,45 +157,7 @@ ZBOX_EXPORT void *
 ZBOX_EXPORT int
 	hash_cmp_string(void *privdata, const void *key1, const void *key2);
 ZBOX_EXPORT void
-	hash_destroy_string(void *privdata, void *key);
-
-
-void hash_test();
-
-/* Hash table types */
-
-hash_ctrl_t hash_ctrl_copy_key_string = {
-	hash_func_string,           /* hash function */
-	hash_dup_string,             /* key dup */
-	NULL,                       /* val dup */
-	hash_cmp_string,   			/* key compare */
-	hash_destroy_string,         /* key destructor */
-	NULL                        /* val destructor */
-};
-
-/* This is like StringCopy but does not auto-duplicate the key.
-* It's used for intepreter's shared strings. */
-hash_ctrl_t hash_ctrl_string = {
-	hash_func_string,       /* hash function */
-	NULL,                   /* key dup */
-	NULL,                   /* val dup */
-	hash_cmp_string,   		/* key compare */
-	NULL,         			/* key destructor */
-	NULL                    /* val destructor */
-};
-
-/* This is like StringCopy but also automatically handle dynamic
-* allocated C strings as values. */
-hash_ctrl_t hash_ctrl_copy_key_value_string = {
-	hash_func_string,              /* hash function */
-	hash_dup_string,                /* key dup */
-	hash_dup_string,                /* val dup */
-	hash_cmp_string,                /* key compare */
-	hash_destroy_string,            /* key destructor */
-	hash_destroy_string,            /* val destructor */
-};
-
-
+	hash_destroy_string(void *privdata, void *key); 
 #ifdef __cplusplus
 }
 #endif
