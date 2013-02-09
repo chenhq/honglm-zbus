@@ -107,11 +107,19 @@ zframe_strhex (zframe_t *self){
     return hex_str;
 }
 
-static void
-_zframe_print(zframe_t* self, FILE* file){
+void
+zframe_log(zframe_t* self){ 
+	FILE* file = zlog_get_log_file();  
+
 	byte *data = (byte*)zframe_data (self);
 	size_t size = zframe_size (self);
+	fprintf (file, "[%03d] ", (int) size);
 
+	char *elipsis = "";
+	if(size > 128){
+		size = 128;
+		elipsis = "...";
+	}
 	int is_bin = 0;
 	uint char_nbr;
 	for (char_nbr = 0; char_nbr < size; char_nbr++){
@@ -120,14 +128,7 @@ _zframe_print(zframe_t* self, FILE* file){
 			break;
 		}
 	}
-
-	fprintf (file, "[%03d] ", (int) size);
-	size_t max_size = is_bin? 35: 70;
-	char *elipsis = "";
-	if (size > max_size) {
-		size = max_size;
-		elipsis = "...";
-	}
+ 
 	for (char_nbr = 0; char_nbr < size; char_nbr++) {
 		if (is_bin)
 			fprintf (file, "%02X", (unsigned char) data [char_nbr]);
@@ -136,20 +137,6 @@ _zframe_print(zframe_t* self, FILE* file){
 	}
 	fprintf (file, "%s\n", elipsis);
 }
-
-void
-zframe_print (zframe_t *self){
-    assert (self);
-    _zframe_print(self, stderr);
-}
-
-void
-zframe_log(zframe_t* self){
-	if(!zlog_enabled()) return;
-	FILE* file = zlog_get_log_file();
-	_zframe_print(self, file);	
-}
-
 
 static void _zframe_destroy(void** ptr){
 	zframe_destroy((zframe_t**)ptr);
@@ -234,91 +221,6 @@ zmsg_pop_back (zmsg_t *self){
 	return msg;
 }
 
-
-void
-zmsg_push_front_str (zmsg_t *self, const char *format, ...){
-	assert (self);
-	assert (format);
-	//  Format string into buffer
-	va_list argptr;
-	va_start (argptr, format);
-	int size = 255 + 1;
-	char *string = (char *) zmalloc (size);
-	assert(string);
-
-	int required = vsnprintf (string, size, format, argptr);
-	if (required >= size) {
-		size = required + 1;
-		string = (char *) zrealloc (string, size);
-		assert(string);
-		vsnprintf (string, size, format, argptr);
-	}
-	va_end (argptr);
-
-	zframe_t* frame = zframe_new (string, strlen (string));
-	assert(frame);
-
-	list_push_front (self->frames, frame);
-	self->content_size += strlen (string);
-	zfree (string);
-}
-
-
-void
-zmsg_push_back_str (zmsg_t *self, const char *format, ...){
-	assert (self);
-	assert (format);
-	//  Format string into buffer
-	va_list argptr;
-	va_start (argptr, format);
-	int size = 255 + 1;
-	char *string = (char *) zmalloc (size);
-	assert(string);
-
-	int required = vsnprintf (string, size, format, argptr);
-	if (required >= size) {
-		size = required + 1;
-		string = (char *) zrealloc (string, size);
-		assert(string);
-		vsnprintf (string, size, format, argptr);
-	}
-	va_end (argptr);
-
-	zframe_t* frame = zframe_new (string, strlen (string));
-	assert(frame);
-
-	list_push_back (self->frames, frame);
-	self->content_size += strlen (string);
-	zfree (string);
-}
-
-
-char *
-zmsg_pop_front_str(zmsg_t *self){
-    assert (self);
-    zframe_t *frame = (zframe_t *) list_pop_front (self->frames);
-    char *string = NULL;
-    if (frame) {
-        self->content_size -= zframe_size (frame);
-        string = zframe_strdup (frame);
-        zframe_destroy(&frame);
-    }
-    return string;
-}
-
-char *
-zmsg_pop_back_str(zmsg_t *self){
-    assert (self);
-    zframe_t *frame = (zframe_t *) list_pop_back (self->frames);
-    char *string = NULL;
-    if (frame) {
-        self->content_size -= zframe_size (frame);
-        string = zframe_strdup (frame);
-        zframe_destroy(&frame);
-    }
-    return string;
-}
-
 void
 zmsg_wrap (zmsg_t *self, zframe_t *frame){
 	assert( self );
@@ -343,29 +245,14 @@ zmsg_unwrap (zmsg_t *self){
 
 zframe_t *
 zmsg_frame (zmsg_t *self, int index){
-	list_iter_t* iter = NULL;
-	if(index>=0){
-		index += 1; //number of frame to locate
-		iter = list_iter_new(self->frames, LIST_ITER_FORWARD);
-	} else {
-		index = -index; //number of frame to locate
-		iter = list_iter_new(self->frames, LIST_ITER_BACKWARD);
+	list_node_t* node = list_head(self->frames);
+	int i = 0;
+	while(node && i<index){
+		node = list_next(node);
+		i++;
 	}
-	zframe_t* frame = NULL;
-	while(1){
-		frame = (zframe_t*)list_iter_next(iter);
-		if(!frame || --index<=0) break;
-	}
-	assert(iter);
-
-	list_iter_destroy(&iter);
-	return frame;
+	return node? (zframe_t*)list_value(node): NULL;
 }
-
-void* zmsg_frames(zmsg_t* self){
-	return self->frames;
-}
-
 
 zmsg_t *
 zmsg_dup (zmsg_t *self)
@@ -391,30 +278,9 @@ zmsg_dup (zmsg_t *self)
     return copy;
 }
 
-void
-zmsg_dump (zmsg_t *self){
-    fprintf (stderr, "--------------------------------------\n");
-    if (!self) {
-        fprintf (stderr, "NULL");
-        return;
-    }
-    list_iter_t* iter = list_iter_new(self->frames, LIST_ITER_FORWARD);
-    int frame_nbr = 0;
-    zframe_t* frame = (zframe_t*)list_iter_next(iter);
-    while(frame){
-    	if(++frame_nbr >10) break;
-    	zframe_print(frame);
-    	frame = (zframe_t*)list_iter_next(iter);
-    }
-    fprintf (stderr, "\n");
-    list_iter_destroy(&iter);
-}
-
 
 void
-zmsg_log(zmsg_t* self){
-	if(!zlog_enabled()) return;
-
+zmsg_log(zmsg_t* self){ 
 	FILE* file = zlog_get_log_file();
 
 	time_t curtime = time (NULL);
@@ -423,19 +289,15 @@ zmsg_log(zmsg_t* self){
 	strftime (formatted, 32, "%Y-%m-%d %H:%M:%S ", loctime);
 	fprintf (file, "%s\n", formatted);
 	fprintf (file, "--------------------------------------\n");
-	list_iter_t* iter = list_iter_new((list_t*)zmsg_frames(self), LIST_ITER_FORWARD);
-	zframe_t* frame = (zframe_t*)list_iter_next(iter);
-	while(frame){
+
+	list_node_t* node = list_head(self->frames);
+	while(node){
+		zframe_t* frame = (zframe_t*)list_value(node);
 		zframe_log(frame);
-		frame = (zframe_t*)list_iter_next(iter);
+		node = list_next(node);
 	}
-
-	list_iter_destroy(&iter);
-
 	fflush(file); 
 }
-
-
 
 //  --------------------------------------------------------------------------
 //  Send message to socket, destroy after sending. If the message has no
@@ -463,7 +325,7 @@ zmsg_t *
 zmsg_recv (void *socket){
 	assert(socket);
 	zmsg_t* self = zmsg_new();
-	assert(self);
+	if(!self) return NULL;
 
 	int64_t more = 0;
 	size_t option_len = sizeof (int64_t);
@@ -484,44 +346,21 @@ zmsg_recv (void *socket){
 
 void*
 zctx_new(int io_threads){
-	assert(io_threads>0);
-
-#if ZMQ_VERSION_MAJOR < 3
-	void* ctx = zmq_init(io_threads);
-	assert(ctx);
-	return ctx;
-#else
+	assert(io_threads>0); 
 	void* ctx = zmq_ctx_new();
 	assert(ctx);
 	int rc = zmq_ctx_set(ctx, ZMQ_IO_THREADS, 1);
 	assert(rc == 0);
-	return ctx;
-#endif
+	return ctx; 
 }
 
 
 void
 zctx_destroy(void** self_p){
-	assert(self_p);
+	if(!self_p) return;
 	void* self = *self_p;
 	if(self_p){
-
-#if ZMQ_VERSION_MAJOR < 3
-	zmq_term(self);
-#else
-	zmq_ctx_destroy(self);
-#endif
+		zmq_ctx_destroy(self); 
 		*self_p = NULL;
 	}
-}
- 
-zframe_t* 
-zmsg_index (zmsg_t *self, int index){
-	assert(self); 
-	list_node_t* node = list_head(self->frames);
-	int i = 0;
-	while(node && i++<index){
-		node = list_next(node);
-	}
-	return node? (zframe_t*)list_value(node): NULL;
 }

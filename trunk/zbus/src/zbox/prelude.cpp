@@ -141,7 +141,7 @@ zmutex_new (void){
 
 void
 zmutex_destroy (zmutex_t **self_p){
-	assert (self_p);
+	if (!self_p) return;
 	zmutex_t *self = *self_p;
 	if (self) { 
 #if defined (__UNIX__)
@@ -307,7 +307,6 @@ zclock_time (void){
 
 
 ///////////////////////////////////////log//////////////////////////////////
-int	  g_log_enabled = 1;
 char  g_log_path[256] = {'.'};
 int   g_log_date = 0;
 FILE* g_log_file = NULL;
@@ -315,27 +314,11 @@ int   g_log_stdout = 1;
 
 
 void
-zlog_enable(){
-	g_log_enabled = 1;
-}
-
-void
-zlog_disable(){
-	g_log_enabled = 0;
-}
-
-int
-zlog_enabled(){
-	return g_log_enabled == 1;
-}
-void
-zlog_use_stdout(){
-	g_log_enabled = 1;
+zlog_use_stdout(){ 
 	g_log_stdout = 1;
 }
 void
-zlog_use_file(char* base_path){
-	g_log_enabled = 1;
+zlog_use_file(char* base_path){ 
 	g_log_stdout = 0;
 	strcpy(g_log_path, base_path);
 }
@@ -368,9 +351,7 @@ zlog_get_log_file(){
 }
 
 void
-zlog(const char *format, ...){ 
-	if(!zlog_enabled()) return;
-
+zlog(const char *format, ...){  
 	FILE* file = zlog_get_log_file();
 
 	time_t curtime = time (NULL);

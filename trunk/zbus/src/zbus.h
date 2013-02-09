@@ -10,12 +10,7 @@
 #include "include/zmq.h"
 #include "zbox/include/zmsg.h"
 
-#define ZBUS_VERSION		"v20130129"
- 
-//the following three will be removed
-#define MODE_MQ		2 
-#define MDPW_REQ    "\002"
-#define MDPW_REP    "\003"
+#define ZBUS_VERSION		"V2013Spring"
 
 #define MDPC        "MDPC01" 
 #define MDPW        "MDPW01" 
@@ -71,22 +66,23 @@ void
 void
 	queue_process  (zframe_t *sender, zmsg_t *msg);
 void
-	ping_process   (zframe_t *sender, zmsg_t *msg);
+	probe_process   (zframe_t *sender, zmsg_t *msg);
 
 void
-	worker_command (zframe_t *worker, char* command, zmsg_t *msg);
+	worker_command (zframe_t *worker_address, char* command, zmsg_t *msg);
+void
+	worker_disconnect (zframe_t* worker_address, char* reason);
 worker_t*
 	worker_new(zframe_t* address);
+worker_t*
+	worker_register (zframe_t* sender, zmsg_t *msg);
 void
 	worker_destroy(worker_t** self_p);
-void
-	worker_register (worker_t *worker, zmsg_t *msg);
+
 void
 	worker_unregister (worker_t* worker);
 void
-	worker_waiting (worker_t *worker);
-void
-	worker_invalid (worker_t* worker, char* reason);
+	worker_waiting (worker_t *worker); 
 
  
 service_t*

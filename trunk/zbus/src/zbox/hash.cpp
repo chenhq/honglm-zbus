@@ -411,7 +411,7 @@ _hash_clear(hash_t *d, hash_table_t *ht){
 /* Clear & Release the hash table */
 void
 hash_destroy(hash_t ** self_p){
-	assert(self_p);
+	if(!self_p) return;
 	hash_t* self = *self_p;
 	if(self){
 		_hash_clear(self,&self->ht[0]);
@@ -504,7 +504,7 @@ hash_iter_next(hash_iter_t *iter){
 
 void
 hash_iter_destroy(hash_iter_t **iter_p){
-	assert(iter_p);
+	if(!iter_p) return;
 	hash_iter_t* iter = *iter_p;
 	if(iter){
 		if (iter->safe && !(iter->index == -1 && iter->table == 0))

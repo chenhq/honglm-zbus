@@ -464,10 +464,6 @@ ZBOX_EXPORT char*
 	option(int argc, char* argv[], char* opt, char* default_value);
 
 ZBOX_EXPORT void
-	zlog_disable();
-ZBOX_EXPORT int
-	zlog_enabled();
-ZBOX_EXPORT void
 	zlog_use_stdout();
 ZBOX_EXPORT void
 	zlog_use_file(char* base_path);

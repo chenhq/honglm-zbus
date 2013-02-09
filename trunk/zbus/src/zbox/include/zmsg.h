@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+ 
 #if (defined (__WINDOWS__))
 #   if defined DLL_EXPORT
 #       define ZBOX_EXPORT __declspec(dllexport)
@@ -44,9 +44,7 @@ ZBOX_EXPORT zframe_t *
 ZBOX_EXPORT int
 	zframe_streq (zframe_t *self, char *string);
 ZBOX_EXPORT char *
-	zframe_strhex (zframe_t *self);
-ZBOX_EXPORT void
-	zframe_print (zframe_t *self);
+	zframe_strhex (zframe_t *self); 
 ZBOX_EXPORT void
 	zframe_log (zframe_t *self);
 
@@ -70,26 +68,6 @@ ZBOX_EXPORT size_t
 //  Return combined size of all frames in message
 ZBOX_EXPORT size_t
     zmsg_content_size (zmsg_t *self);
-
-
-//  Push string as new frame to front of message.
-//  Returns 0 on success, -1 on error.
-ZBOX_EXPORT void
-    zmsg_push_front_str (zmsg_t *self, const char *format, ...);
-
-//  Push string as new frame to end of message.
-//  Returns 0 on success, -1 on error.
-ZBOX_EXPORT void
-    zmsg_push_back_str (zmsg_t *self, const char *format, ...);
-
-//  Pop frame off front of message, return as fresh string
-ZBOX_EXPORT char *
-    zmsg_pop_front_str (zmsg_t *self);
-
-//  Pop frame off tail of message, return as fresh string
-ZBOX_EXPORT char *
-    zmsg_pop_back_str (zmsg_t *self);
-
 
 
 //  Push frame to front of message, before first frame
@@ -122,22 +100,11 @@ ZBOX_EXPORT zframe_t *
 
 
 ZBOX_EXPORT zframe_t*
-	zmsg_frame(zmsg_t* self, int index);
-ZBOX_EXPORT void* 
-	zmsg_frames(zmsg_t* self);
-//  Print message to stderr, for debugging
-ZBOX_EXPORT void
-    zmsg_dump (zmsg_t *self);
+	zmsg_frame(zmsg_t* self, int index); 
 
 ZBOX_EXPORT void
 	zmsg_log (zmsg_t *self);
 
-
-ZBOX_EXPORT zframe_t*
-	zmsg_index (zmsg_t *self, int index);
-
-void
-	zmsg_test ();
 
 #ifdef __cplusplus
 }

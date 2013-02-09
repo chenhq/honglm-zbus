@@ -19,7 +19,7 @@ list_new(void){
 
 void
 list_destroy(list_t** self_p){
-	assert(self_p);
+	if(!self_p) return;
 	list_t* self = *self_p;
 	if(self){
 		unsigned int len;
@@ -184,7 +184,7 @@ list_iter_new(list_t *list, int direction){
 
 void
 list_iter_destroy(list_iter_t ** self_p) {
-	assert(self_p);
+	if(!self_p) return;
 	list_iter_t* iter = *self_p;
 	if(iter){
 		zfree(iter);
