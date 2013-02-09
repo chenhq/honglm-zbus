@@ -103,7 +103,7 @@ ZBOX_EXPORT zframe_t*
 	zmsg_frame(zmsg_t* self, int index); 
 
 ZBOX_EXPORT void
-	zmsg_log (zmsg_t *self);
+	zmsg_log(zmsg_t* self, char* prefix, ...);
 
 
 #ifdef __cplusplus

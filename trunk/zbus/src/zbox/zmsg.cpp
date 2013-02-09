@@ -280,15 +280,21 @@ zmsg_dup (zmsg_t *self)
 
 
 void
-zmsg_log(zmsg_t* self){ 
+zmsg_log(zmsg_t* self, char* prefix, ...){ 
 	FILE* file = zlog_get_log_file();
 
+	if(!prefix) prefix = "";
 	time_t curtime = time (NULL);
 	struct tm *loctime = localtime (&curtime);
 	char formatted [32];
 	strftime (formatted, 32, "%Y-%m-%d %H:%M:%S ", loctime);
-	fprintf (file, "%s\n", formatted);
-	fprintf (file, "--------------------------------------\n");
+	fprintf (file, "%s", formatted); 
+
+	va_list argptr;
+	va_start (argptr, prefix);
+	vfprintf (file, prefix, argptr);
+	va_end (argptr); 
+	fprintf (file, "\n");
 
 	list_node_t* node = list_head(self->frames);
 	while(node){
@@ -298,6 +304,7 @@ zmsg_log(zmsg_t* self){
 	}
 	fflush(file); 
 }
+
 
 //  --------------------------------------------------------------------------
 //  Send message to socket, destroy after sending. If the message has no

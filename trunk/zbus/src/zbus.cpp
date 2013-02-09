@@ -226,10 +226,9 @@ int main (int argc, char *argv []){
 		zmsg_t* msg = zmsg_recv(zbus->socket);
 		if(!msg) continue; //timeout
 
-		if(zmsg_frame_size(msg)<3){
-			zlog("[ERROR]: invalid message: should be at least 3 frames\n");
+		if(zmsg_frame_size(msg)<3){ 
 			if(zbus->verbose){
-				zmsg_log(msg);
+				zmsg_log(msg, "[ERROR]: invalid message, should be at least 3 frames");
 			}
 			zmsg_destroy(&msg);
 			continue;
@@ -244,7 +243,7 @@ int main (int argc, char *argv []){
 			if(hbt && zframe_streq(hbt, MDPW_HBT)) ignore = 1;	
 			
 			if(!ignore) {
-				zmsg_log(msg);
+				zmsg_log(msg, NULL);
 			}
 		}
 
