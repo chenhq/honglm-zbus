@@ -741,7 +741,7 @@ zbus_new(int argc, char* argv[]){
 		printf("zbus start failed, (%s) %s", self->endpoint, zmq_strerror(zmq_errno()));
 		abort();
 	} 
-	zlog("zbus started: address(%s)\n", self->endpoint);
+	zlog("zbus(%s) started: address(%s)\n", ZBUS_VERSION, self->endpoint);
 	return self;
 }
 
