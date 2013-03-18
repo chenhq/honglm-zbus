@@ -357,8 +357,8 @@ zlog(const char *format, ...){
 	time_t curtime = time (NULL);
 	struct tm *loctime = localtime (&curtime);
 	char formatted [32];
-	strftime (formatted, 32, "%Y-%m-%d %H:%M:%S ", loctime);
-	fprintf (file, "%s", formatted); 
+	strftime (formatted, 32, "%Y-%m-%d %H:%M:%S", loctime);
+	fprintf (file, "%s.%03d ", formatted, zclock_time()%1000); 
 
 	va_list argptr;
 	va_start (argptr, format);

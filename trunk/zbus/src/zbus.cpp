@@ -114,15 +114,16 @@ hash_ctrl_t hash_ctrl_string_worker = {
 
 void
 zbus_heartbeat(){
-	zbus->heartbeat_at = zclock_time() + zbus->heartbeat_interval;
+	int64_t current = zclock_time();
+	zbus->heartbeat_at = current + zbus->heartbeat_interval;
 
 	if(zbus->verbose == VERBOSE_CONSOLE){
 		time_t curtime = time (NULL);
 		struct tm *loctime = localtime (&curtime);
 		char formatted [32];
-		strftime (formatted, 32, "%Y-%m-%d %H:%M:%S ", loctime);
-		fprintf(stdout, "%s heap:[%010ld] | services: [%02ld] | workers:[%04ld]\n",
-			formatted, zmalloc_used_memory(),hash_size(zbus->services), hash_size(zbus->workers));
+		strftime (formatted, 32, "%Y-%m-%d %H:%M:%S", loctime);
+		fprintf(stdout, "%s.%03d heap:[%010ld] | services: [%02ld] | workers:[%04ld]\n",
+			formatted, current%1000, zmalloc_used_memory(),hash_size(zbus->services), hash_size(zbus->workers));
 	}
 
 	hash_iter_t* svc_iter = hash_iter_new(zbus->services);
