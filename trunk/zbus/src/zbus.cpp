@@ -122,8 +122,9 @@ zbus_heartbeat(){
 		struct tm *loctime = localtime (&curtime);
 		char formatted [32];
 		strftime (formatted, 32, "%Y-%m-%d %H:%M:%S", loctime);
+		int ms = current%1000;
 		fprintf(stdout, "%s.%03d heap:[%010ld] | services: [%02ld] | workers:[%04ld]\n",
-			formatted, current%1000, zmalloc_used_memory(),hash_size(zbus->services), hash_size(zbus->workers));
+			formatted, ms, zmalloc_used_memory(),hash_size(zbus->services), hash_size(zbus->workers));
 	}
 
 	hash_iter_t* svc_iter = hash_iter_new(zbus->services);
