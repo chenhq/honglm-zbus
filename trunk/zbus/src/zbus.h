@@ -10,7 +10,7 @@
 #include "include/zmq.h"
 #include "zbox/include/zmsg.h"
 
-#define ZBUS_VERSION		"V2013Spring"
+#define ZBUS_VERSION		"V20130328"
 
 #define MDPC        "MDPC01" 
 #define MDPW        "MDPW01" 
@@ -20,6 +20,7 @@
 #define MDPT		"MDPT01"
 
 #define MODE_LB		1
+#define MODE_PUBSUB	2
 #define MODE_BC		3
 
 #define MDPW_REG	"\001"
@@ -28,6 +29,8 @@
 #define MDPW_DISC   "\005"
 #define MDPW_SYNC	"\006"
 #define MDPW_IDLE	"\007"  
+#define MDPW_SUB	"\009" 
+#define MDPW_UNSUB	"\010" 
 
 #define HEARTBEAT_INTERVAL		2500
 #define HEARTBEAT_LIVENESS		3

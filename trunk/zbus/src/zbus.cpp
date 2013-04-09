@@ -3,7 +3,7 @@
 #include "zbox/include/hash.h"
 #include "zbox/include/zmsg.h"
 
-#include "zbus.h"
+#include "zbus.h" 
 
 struct _zbus_t{
 	void* 		ctx;
@@ -51,6 +51,7 @@ struct _worker_t{
 	zframe_t*	address;          	//  Address frame to route to
 	service_t*	service;         	//  Owning service, if known
 	int64_t 	expiry;             //  Expires at unless heartbeat 
+	hash_t*		topics;
 };
 
 zbus_t *zbus = NULL;
@@ -110,6 +111,15 @@ hash_ctrl_t hash_ctrl_string_worker = {
 	hash_cmp_string,             /* key compare */
 	hash_destroy_string,         /* key destructor */
 	_worker_destroy,             /* val destructor */
+};
+
+hash_ctrl_t hash_ctrl_string_topic = {
+	hash_func_string,            /* hash function */
+	hash_dup_string,             /* key dup */
+	hash_dup_string,             /* val dup */
+	hash_cmp_string,             /* key compare */
+	hash_destroy_string,         /* key destructor */
+	hash_destroy_string,         /* val destructor */
 };
 
 void
@@ -221,9 +231,9 @@ int main (int argc, char *argv []){
 			zbus_heartbeat();
 		}
 		//clean timeout workers if any, every default of 25s
-		//if(zclock_time() > zbus->workerclean_at){
-		//	zbus_clean_worker();
-		//}
+		if(zclock_time() > zbus->workerclean_at){
+			zbus_clean_worker();
+		}
 
 		zmsg_t* msg = zmsg_recv(zbus->socket);
 		if(!msg) continue; //timeout
@@ -381,6 +391,38 @@ destroy:
 }
 
 //////////////////////////////////MDPW PROCESS///////////////////////////////
+void
+worker_subscribe(worker_t* worker, zmsg_t* topics){
+	assert(worker);
+	assert(topics);
+	if(!worker->topics){
+		worker->topics = hash_new(&hash_ctrl_string_topic, NULL);
+	} 
+	while(1){
+		zframe_t* frame = zmsg_pop_front(topics);
+		if(!frame) break;
+		char* topic = zframe_strdup(frame);
+		hash_put(worker->topics, topic, topic);
+		zfree(topic);
+		zframe_destroy(&frame);
+	}
+}
+void
+worker_unsubscribe(worker_t* worker, zmsg_t* topics){
+	assert(worker);
+	assert(topics);
+	if(!worker->topics){
+		return; //just ignore
+	} 
+	while(1){
+		zframe_t* frame = zmsg_pop_front(topics);
+		if(!frame) break;
+		char* topic = zframe_strdup(frame);
+		hash_rem(worker->topics, topic);
+		zfree(topic);
+		zframe_destroy(&frame);
+	} 
+}
 void 
 worker_process (zframe_t *sender, zmsg_t *msg){
 	if(zmsg_frame_size(msg) < 1){ //invalid message
@@ -416,6 +458,10 @@ worker_process (zframe_t *sender, zmsg_t *msg){
 		worker_unregister(worker); 
 	} else if(zframe_streq(command, MDPW_REG)){
 		//worker exists, register again, just ignore
+	} else if(zframe_streq(command, MDPW_SUB)){ 
+		worker_subscribe(worker, msg);
+	} else if(zframe_streq(command, MDPW_UNSUB)){ 
+		worker_unsubscribe(worker, msg);
 	} else {
 		zlog("invalid worker message\n");
 	} 
@@ -459,6 +505,9 @@ worker_destroy(worker_t** self_p){
 			zfree(self->identity);
 		if(self->address)
 			zframe_destroy(&self->address);
+		if(self->topics)
+			hash_destroy(&self->topics);
+
 		zfree(self);
 		*self_p = NULL;
 	}
@@ -491,7 +540,7 @@ worker_register (zframe_t* sender, zmsg_t *msg){
 		goto destroy;
 	}
 
-	if(type != MODE_LB && type != MODE_BC){
+	if(type != MODE_LB && type != MODE_PUBSUB && type != MODE_BC){
 		worker_disconnect(sender, "type frame wrong");
 		goto destroy;
 	}
@@ -619,6 +668,31 @@ s_service_dispatch(service_t* service){
 				worker_command(worker->address, MDPW_JOB, msg_copy);
 				node = list_next(node);
 			}
+			zmsg_destroy(&msg);
+		}
+	} else if(service->type == MODE_PUBSUB){//pubsub
+		while(list_size(service->requests)){
+			zmsg_t* msg = service_deque_request(service);
+			if(zmsg_frame_size(msg)<4){
+				zmsg_destroy(&msg);
+				continue;
+			}
+			zframe_t* topic_frame = zmsg_frame(msg, 3);
+			char* topic = zframe_strdup(topic_frame);  
+
+			list_node_t* node = list_head(service->workers);
+			while(node){
+				worker_t* worker = (worker_t*)list_value(node); 
+				if(worker->topics){
+					if(hash_get(worker->topics, topic)){
+						zmsg_t* msg_copy = zmsg_dup(msg);
+						worker_command(worker->address, MDPW_JOB, msg_copy);	
+					}
+				} 
+				node = list_next(node);
+			}
+
+			zfree(topic);
 			zmsg_destroy(&msg);
 		}
 	} else {
