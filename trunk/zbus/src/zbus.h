@@ -10,7 +10,7 @@
 #include "include/zmq.h"
 #include "zbox/include/zmsg.h"
 
-#define ZBUS_VERSION		"V20130328"
+#define ZBUS_VERSION		"V3.5.0"
 
 #define MDPC        "MDPC01" 
 #define MDPW        "MDPW01" 
