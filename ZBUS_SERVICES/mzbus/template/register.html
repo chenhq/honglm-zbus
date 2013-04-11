@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<title>ZBUS Admin</title>
+<script type="text/javascript" src="{{handler.static_url('js/bootstrap.min.js')}}"></script> 
+<script type="text/javascript" src="{{handler.static_url('js/zbus.js')}}"></script> 
+
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/bootstrap.min.css')}}"/>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/zbus.css')}}"/>
+
+<style type="text/css">
+
+</style>
+</head>
+<body>
+<div class="head"><a href="/">ZBUS服务总线监控管理</a> -- 手动注册服务</div>
+
+ 
+<form class="register" action="/register" method="post">
+	<input name="name" placeholder="服务标识" type="text"><br>
+	<input name="token" placeholder="认证密码（默认空）" type="text"><br>
+	<div>
+	<select name="type">
+	  <option value="1">负载均衡</option> 
+	  <option value="3">发布订阅</option> 
+	</select> 
+	</div>
+	<button type="submit" class="btn-info">注册服务</button>
+</form>   
+
+</body>
+</html>

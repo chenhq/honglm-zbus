@@ -1,0 +1,30 @@
+.head {
+	text-align: center;
+	border-bottom: 3px gray solid;
+	font-size: 24px;
+	font-weight: bold;
+	padding: 6px 0px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.login {
+	text-align: center;
+	margin-top: 20px;
+}
+
+.dashboard {
+	border-bottom: 2px gray solid;
+	min-width: 90%;
+	font-size: 16px;
+}
+.dashboard thead{
+	background-color: gray;
+}
+
+.register{
+	text-align: center;
+}
+.register input{
+	margin-bottom: 10px;
+}
