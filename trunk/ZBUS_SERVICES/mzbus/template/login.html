@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<title>ZBUS Admin</title>
+<script type="text/javascript" src="{{handler.static_url('js/bootstrap.min.js')}}"></script> 
+<script type="text/javascript" src="{{handler.static_url('js/zbus.js')}}"></script> 
+
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/bootstrap.min.css')}}"/>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/zbus.css')}}"/>
+
+<style type="text/css">
+
+</style>
+</head>
+<body>
+<div class="head">ZBUS服务总线监控管理</div>
+ 
+<form class="login" action="/login" method="post">
+	<input name="broker" placeholder="ZBUS地址 (e.g. 127.0.0.1:15555)" type="text" value="{{server_ip}}:15555"><br>
+	<input name="token" placeholder="认证密码（默认空）" type="password"><br>
+	<input name="next" type="hidden" value="{{next}}">
+	<button type="submit" class="btn-info">监控总线</button>
+</form> 
+
+
+</body>
+</html>

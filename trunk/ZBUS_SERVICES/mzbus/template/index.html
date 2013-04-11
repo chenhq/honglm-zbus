@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head> 
+<title>ZBUS Admin</title>
+<script type="text/javascript" src="{{handler.static_url('js/bootstrap.min.js')}}"></script> 
+<script type="text/javascript" src="{{handler.static_url('js/zbus.js')}}"></script> 
+
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/bootstrap.min.css')}}"/>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/zbus.css')}}"/>
+</head>
+<body>
+
+<div class="container">
+
+<div class="head">
+ZBUS服务总线监控管理({{broker}})
+
+<div style="float: right; margin-right: 20px;">
+<a href="/register" style="font-size: 16px; font-weight: bold; text-decoration: underline;">注册服务</a>
+<a href="/logout">退出</a>
+</div>
+</div> 
+
+<div align="center">
+<table class="dashboard table table-hover">
+<thead>
+  <tr>
+  	<th>服务名</th>
+  	<th>类型</th>
+  	<th style="min-width: 20%;">空闲/总计(服务)</th>
+  	<th style="min-width: 20%;">数目/大小(滞留消息)</th>
+  	<th>安全码</th> 
+  	<th>操作</th>
+  </tr>
+</thead>
+<tbody>
+{% for svc in svcs %} 
+<tr>
+<td>{{svc['name']}}</td>
+<td>{{svc['type']}}</td>
+<td style="text-align: center;">{{svc['idle_workers']}} / {{svc['total_workers']}}</td>
+<td style="text-align: center;">{{svc['requests']}} / {{svc['mq_size']}}</td>
+<td style="text-align: center;">{{svc['token']}}</td> 
+<td style="text-align: center;">
+<a onclick="return clearMQ('{{svc['name']}}');" href="/clear?svc={{svc['name']}}">清空消息</a> |
+<a onclick="return delMQ('{{svc['name']}}');" href="/del?svc={{svc['name']}}">注销服务</a> </td>
+</tr>
+{% end for %}
+</tbody>
+</table>
+
+</div>
+
+
+</div>
+</body>
+</html>
