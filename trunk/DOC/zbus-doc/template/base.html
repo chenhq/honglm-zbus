@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ZBUS Enterprise Service Bus</title> 
+<script type="text/javascript" src="{{handler.static_url('js/jquery.js')}}"></script>
+<script type="text/javascript" src="{{handler.static_url('js/bootstrap.min.js')}}"></script>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/bootstrap.min.css')}}"/>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/global.css')}}"/>
+<style>
+div.code{
+	position: relative;
+	margin-top: 80px;
+} 
+.CodeMirror {border: 1px inset #dee;}
+</style> 
+</head>
+<body>
+
+<div class="navbar-wrapper">
+  <div class="container">
+    <div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </a>
+        <a class="brand" href="/">ZBUS总线</a>
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li class="active"><a href="#">首页</a></li>
+            <li><a href="#about">下载</a></li>
+            <li><a href="#contact">C/C++</a></li>
+            <li><a href="#about">JAVA</a></li>
+            <li><a href="#about">PYTHON</a></li>
+            <li><a href="#about">.NET</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">运行案例 <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+              	<li class="nav-header">系统整合</li>
+                <li><a href="#">交易调度</a></li>
+                <li><a href="#">金证KCXP</a></li>
+                <li><a href="#">伊诺TC</a></li>
+                <li class="divider"></li>
+                <li class="nav-header">新业务开发</li>
+                <li><a href="#">互动平台</a></li> 
+                <li><a href="#">资产管理</a></li> 
+                <li><a href="#">流程引擎</a></li> 
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div><!-- /.navbar-inner -->
+    </div><!-- /.navbar -->
+  </div> <!-- /.container -->
+</div><!-- /.navbar-wrapper -->
+
+
+<div class="code container"> 
+<h4>zbusconn_cfg_t -- ZBUS链接配置</h4> 
+<textarea id="code" name="code">   
+typedef struct _zbusconn_cfg_t{
+    char    host[32];  //必要，zbus总线IP地址（比如127.0.0.1）
+    int     port;       //必要，zbus总线端口号（比如15555）
+    int     verbose;   //可选，是否打印底层通讯调试消息：0关闭，1打开
+
+    void*    ctx;       //可选， ZMQ Context，默认自动创建
+    char    id[128];   //可选， 链接的ID
+}zbusconn_cfg_t; 
+</textarea>
+
+
+<h4>zbuswrk_cfg_t--ZBUS服务配置</h4>
+<textarea id="helloworld_wrk">	 
+typedef struct _zbuswrk_cfg_t{
+	char		service[128];	//必要，服务名称
+	char		mode[32];		//可选，服务模式，负载均衡（"1"）/广播模式("3")，默认负载均衡
+	char		reg_token[128];	//可选， zbus总线注册服务码（如果总线设定了安全码）
+	char		acc_token[128];	//可选，本服务的访问控制码（设定后，client端需要提供该码）
+} zbuswrk_cfg_t;</textarea>
+
+ <script>
+ var editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+     lineNumbers: true,
+     matchBrackets: true,
+     mode: "text/x-csrc"
+   });
+
+ </script>
+ 
+ 
+</div>
+</body>
+</html>

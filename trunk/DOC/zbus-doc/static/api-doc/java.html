@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block css_js %}
+
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('codemirror/codemirror.css')}}"/>
+
+<script type="text/javascript" src="{{handler.static_url('codemirror/codemirror.js')}}"></script>
+
+<script type="text/javascript" src="{{handler.static_url('codemirror/util/matchbrackets.js')}}"></script>
+<script type="text/javascript" src="{{handler.static_url('codemirror/mode/clike/clike.js')}}"></script>
+
+<style>
+div.code{
+	position: relative;
+	margin-top: 80px;
+} 
+.CodeMirror {border: 1px inset #dee;}
+</style>
+{% end %}
+
+{% block body %}
+
+<div class="code container">
+<h3><p>HelloWorld 客户端示例</p></h3>
+<textarea id="helloworld_cli"> 
+#include <prelude.h>
+#include <zbusapi.h>
+//
+int main(int argc, char* argv[]){ 
+
+	//1） 配置项  
+	zbuscli_cfg_t* cfg = zbuscli_cfg_new(); 
+	zbuscli_cfg_set_broker(cfg, "localhost", 15555); 
+	//
+	//2） 创建zbus客户端--zbuscli_t  
+	zbuscli_t* client = zbuscli_new(cfg); 
+	zbuscli_cfg_destroy(&cfg); 
+
+	//
+	//3） 创建请求消息--zmsg 
+	zmsg_t* req = zmsg_new();//消息由消息帧组成 
+	zmsg_push_back_str(req, "frame1"); 
+	zmsg_push_back_str(req, "frame2"); 
+	char* service = "helloworld"; //服务标示 
+	char* token = ""; //安全访问控制码，默认为空
+	
+	//
+	//4）向总线发送请求并等待回复  ,req在zbuscli_request中自动销毁
+	zmsg_t* res = zbuscli_request(client, service, token, req); 
+ 
+ 	//
+ 	//处理消息，业务逻辑发生点
+	zmsg_dump(res); 
+	
+	//
+	//5）销毁消息，应答消息需要主动销毁
+	zmsg_destroy(&res); 
+
+	//
+	//6）销毁客户端  
+	zbuscli_destroy(&client); 
+}
+</textarea>
+
+
+<h3><p>HelloWorld 服务端示例</p></h3>
+<textarea id="helloworld_wrk">	 
+#include <prelude.h>
+#include <zbusapi.h>
+
+//
+//创建消息处理callback--来了一个请求，如何处理
+zmsg_t* handle_msg(zmsg_t* req){
+	return req;
+}
+
+//
+int main(int argc, char* argv[]){
+	//
+	//1）配置服务项
+	zbuswrk_cfg_t* cfg = zbuswrk_cfg_new();
+	zbuswrk_cfg_add_broker(cfg, "localhost", 15555); //增加需要注册的ZBUS实例（可多总线注册）
+	zbuswrk_cfg_set_service(cfg, "helloworld"); //设置服务标示
+
+    //2)根据配置注册到ZBUS，以2个线程执行消息处理逻辑，线程数可配置
+	zbuswrk_pool_msg_cb(cfg, 2, handle_msg);
+
+	return 0;
+}
+
+</textarea>
+
+<h3><p>ZBUS C/C++ API</p></h3>
+<textarea id="helloworld_wrk">	 
+zbuscli_cfg_t*  zbuscli_cfg_new(); 
+void zbuscli_cfg_destroy(zbuscli_cfg_t** self_p);
+void zbuscli_cfg_set_ctx(zbuscli_cfg_t* self, void* ctx); 
+void zbuscli_cfg_set_broker(zbuscli_cfg_t* self, char* host, int port);
+void zbuscli_cfg_set_verbose(zbuscli_cfg_t* self, int verbose);
+void zbuscli_cfg_set_timeout(zbuscli_cfg_t* self, int timeout);
+void zbuscli_cfg_set_retries(zbuscli_cfg_t* self, int retries);
+void zbuscli_cfg_set_iothreads(zbuscli_cfg_t* self, int iothreads);
+
+ 
+ 
+zbuscli_t* zbuscli_new(zbuscli_cfg_t* cfg); 
+void zbuscli_destroy(zbuscli_t** self_p);
+zmsg_t* zbuscli_request(zbuscli_t* self, char* service, char* token, zmsg_t* request);
+
+
+
+ 
+
+zbuswrk_cfg_t* zbuswrk_cfg_new();
+zbuswrk_cfg_t* zbuswrk_cfg_dup(zbuswrk_cfg_t* from);
+void zbuswrk_cfg_destroy(zbuswrk_cfg_t** self_p);
+void zbuswrk_cfg_set_ctx(zbuswrk_cfg_t* self, void* ctx);
+void zbuswrk_cfg_set_verbose(zbuswrk_cfg_t* self, int verbose);
+void zbuswrk_cfg_set_heartbeat(zbuswrk_cfg_t* self, int heartbeat);
+void zbuswrk_cfg_set_reconnect(zbuswrk_cfg_t* self, int reconenct);
+void zbuswrk_cfg_set_timeout(zbuswrk_cfg_t* self, int timeout);
+void zbuswrk_cfg_set_service(zbuswrk_cfg_t* self, char* servcie);
+void zbuswrk_cfg_set_regtoken(zbuswrk_cfg_t* self, char* regtoken);
+void zbuswrk_cfg_set_acctoken(zbuswrk_cfg_t* self, char* regtoken);
+void zbuswrk_cfg_set_mode(zbuswrk_cfg_t* self, char* mode);
+void zbuswrk_cfg_add_broker(zbuswrk_cfg_t* self, char* host, int port);
+void zbuswrk_cfg_set_broker(zbuswrk_cfg_t* self, char* broker);
+void zbuswrk_cfg_set_broker2(zbuswrk_cfg_t* self, char* host, int port); 
+
+
+zbuswrk_t* zbuswrk_new(zbuswrk_cfg_t* cfg);
+void zbuswrk_destroy(zbuswrk_t** self_p);  
+zmsg_t* zbuswrk_recv(zbuswrk_t* self, zmsg_t* reply);
+
+
+void zbuswrk_pool_msg_cb(zbuswrk_cfg_t* cfg, int wrk_threads, msg_cb cb);
+void zbuswrk_pool_worker_cb(zbuswrk_cfg_t* cfg, int wrk_threads, worker_cb cb);
+
+</textarea>
+
+<script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("helloworld_cli"), {
+        lineNumbers: true,
+        matchBrackets: true,
+        mode: "text/x-csrc", 
+        readOnly: true,  
+      });
+      
+      CodeMirror.fromTextArea(document.getElementById("helloworld_wrk"), {
+          lineNumbers: true,
+          matchBrackets: true,
+          mode: "text/x-csrc", 
+          readOnly: true,  
+        });
+    </script>
+</div>
+
+{% end %}
+

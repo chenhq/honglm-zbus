@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block css_js %}
+<script type="text/javascript" src="{{handler.static_url('js/jquery.js')}}"></script>
+<script type="text/javascript" src="{{handler.static_url('js/bootstrap.min.js')}}"></script>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/bootstrap.min.css')}}"/>
+<link type="text/css" rel="stylesheet" href="{{handler.static_url('css/global.css')}}"/>
+
+{% end %}
+{% block body %}
+ <!-- Carousel
+    ================================================== -->
+    <div id="myCarousel" class="carousel slide">
+      <div class="carousel-inner">
+        <div class="item active">
+          <img src="{{handler.static_url('img/slide-01.jpg')}}" alt="">
+          <div class="container">
+            <div class="carousel-caption">
+              <h1>交易调度</h1>
+              <p class="lead">通过ZBUS接入交易调度平台，第三方系统不再需要复杂的MSMQ环境配置，不再受限制于平台与语言的选择，把复杂一次性的留给ZBUS适配层</p>
+              <a class="btn btn-large btn-primary" href="#">细节展开</a>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="{{handler.static_url('img/slide-02.jpg')}}" alt="">
+          <div class="container">
+            <div class="carousel-caption">
+              <h1>金证KCXP</h1>
+              <p class="lead">通过ZBUS接入KCXP，第三方系统自由选择平台与语言，访问已有的KCXP系统业务，整合成熟运行的BP业务</p>
+              <a class="btn btn-large btn-primary" href="#">细节展开</a>
+            </div>
+          </div>
+        </div>
+        <div class="item">
+          <img src="{{handler.static_url('img/slide-03.jpg')}}" alt="">
+          <div class="container">
+            <div class="carousel-caption">
+              <h1>金太阳TC</h1>
+              <p class="lead">通过ZBUS接入金太阳TC服务，第三方系统自由选择平台与语言，访问已有的诸如服务产品个性化各类TC服务</p>
+              <a class="btn btn-large btn-primary" href="#">细节展开</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a class="left carousel-control" href="#myCarousel" data-slide="prev">&lsaquo;</a>
+      <a class="right carousel-control" href="#myCarousel" data-slide="next">&rsaquo;</a>
+    </div><!-- /.carousel -->
+ 
+ 
+ 
+<div class="container marketing">
+	<div>
+	<h2>ZBUS总线</h2>
+	<div>
+	zbus v3.2(linux x64) <a href="#">下载</a>
+	</div>
+	<div>
+	zbus v3.2(windows x86) <a href="#">下载</a>
+	</div>
+	<div>
+	zbus v3.2(windows x64) <a href="#">下载</a>
+	</div>
+	</div>
+	
+	<div>
+	<h2><a href="c_cpp" target="_blank">ZBUS C/C++ API</a></h2>
+	<div>
+	czbus v3.2(linux x64) <a href="#">下载</a>
+	</div>
+	<div>
+	czbus v3.2(windows x86) <a href="#">下载</a>
+	</div>
+	<div>
+	czbus v3.2(windows x64) <a href="#">下载</a>
+	</div>
+	</div>
+	
+	
+	<div>
+	<h2><a href="java" target="_blank">ZBUS JAVA API</a></h2>
+	<div>
+	jzbus v3.2<a href="#">下载</a>
+	</div> 
+	</div>
+	
+	
+	<div>
+	<h2><a href="python" target="_blank">ZBUS PYTHON API</a></h2>
+	<div>
+	pyzbus v3.2<a href="#">下载</a>
+	</div> 
+	</div>
+	
+	
+	<div>
+	<h2><a href="clr" target="_blank">ZBUS C#/VB.NET API</a></h2>
+	<div>
+	clrzbus v3.2<a href="#">下载</a>
+	</div> 
+	</div>
+	
+	<div>
+	<h2><a href="#">ZBUS WEB Service</a></h2> 
+	</div>
+
+</div>
+{% end %}
