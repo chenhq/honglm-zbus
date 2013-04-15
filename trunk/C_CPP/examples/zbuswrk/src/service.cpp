@@ -16,9 +16,7 @@ int main(int argc, char* argv[]){
 	zbuswrk_t* worker = zbuswrk_new(&wrk_cfg);
 	
 	zbuswrk_subscribe(conn, worker, "topic1");
-	zbuswrk_subscribe(conn, worker, "topic2");
-	zbuswrk_unsubscribe(conn, worker, "topic1");
-	zbuswrk_unsubscribe(conn, worker, "topic3");
+	zbuswrk_subscribe(conn, worker, "topic2"); 
 	zmsg_t* msg;
 
 	while(1){
