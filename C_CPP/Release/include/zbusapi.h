@@ -23,10 +23,9 @@ extern "C" {
 #define MDPX		"MDPX01"
 #define MDPQ		"MDPQ01"
 #define MDPT		"MDPT01"
-
-//LoadBalance mode
-#define MODE_LB		"1"
-//BroadCast mode
+ 
+#define MODE_LB		"1" 
+#define MODE_PUBSUB	"2"
 #define MODE_BC		"3"
 
 #define MDPW_REG	"\001"
@@ -37,6 +36,8 @@ extern "C" {
 #define MDPW_SYNC	"\006"
 #define MDPW_IDLE	"\007" 
 #define MDPW_DATA	"\008" 
+#define MDPW_SUB	"\009" 
+#define MDPW_UNSUB	"\010" 
 
 #define HEARTBEAT_INTERVAL		2500
 #define HEARTBEAT_LIVENESS		3
@@ -134,6 +135,10 @@ ZBOX_EXPORT int
 	zbuswrk_send(zbusconn_t* self, zbuswrk_t* worker, zmsg_t* msg); 
 ZBOX_EXPORT int
 	zbuswrk_sendto(zbusconn_t* self, zframe_t* client_sock_id, zframe_t* msg_id, zmsg_t* msg); 
+ZBOX_EXPORT int
+	zbuswrk_subscribe(zbusconn_t* self, zbuswrk_t* worker, char* topic);
+ZBOX_EXPORT int
+	zbuswrk_unsubscribe(zbusconn_t* self, zbuswrk_t* worker, char* topic);
 
 //recv client request message from zbus, source socket id and message id stored in worker for reply use
 ZBOX_EXPORT zmsg_t*
