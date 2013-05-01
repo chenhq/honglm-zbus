@@ -4,7 +4,7 @@
 	<groupId>net.zbus</groupId>
 	<artifactId>jzbus</artifactId>
 	<packaging>jar</packaging>
-	<version>3.5.0</version>
+	<version>3.5.1</version>
 	<name>jzbus</name>
 	<url>http://www.guosen.com.cn</url> 
 	<distributionManagement>

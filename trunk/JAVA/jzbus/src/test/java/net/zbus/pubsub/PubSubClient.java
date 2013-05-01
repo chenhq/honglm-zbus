@@ -11,11 +11,11 @@ public class PubSubClient {
 		ConnectionConfig connCfg = new ConnectionConfig(); 
 		BusClient client = new BusClient(connCfg);
 		
-		for(int i=0;i<1000;i++){
+		for(int i=0;i<1;i++){
 		ZMsg message = new ZMsg();
 		message.pushBack("topic2");
 		message.pushBack("contentxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-		boolean status = client.publish("pubsub","","topic", message, 2500);
+		boolean status = client.publish("pubsub","","topic1", message, 2500);
 		
 		System.out.println(status);
 		}
