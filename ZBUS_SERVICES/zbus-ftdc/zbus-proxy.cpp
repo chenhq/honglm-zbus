@@ -193,6 +193,7 @@ zbus_recv_thread(void* args){
 		zmsg_t* request = zbuswrk_recv(zbus_conn, worker);
 		if(!request) break; 
 
+		zmsg_log(request, "FTDC REQ");
 
 		zframe_t* sock_id, *msg_id;
 		zbuswrk_get_address(worker, &sock_id, &msg_id);
@@ -282,7 +283,7 @@ ftdc_thread(void* args){
 	api->RegisterFront(front_addr);
 	api->Init();
 
-	//1)start thread: heartbeating of zbus_connection
+	//1)start thread: heartbeating of reply connection
 	zbusconn_mutex_t conn_mutex;
 	conn_mutex.conn = zbus_conn;
 	conn_mutex.mutex = mutex;
