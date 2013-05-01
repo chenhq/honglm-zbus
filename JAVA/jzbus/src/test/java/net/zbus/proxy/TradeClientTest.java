@@ -40,7 +40,7 @@ public class TradeClientTest{
 		t.operType = "g"; 
 		
 		
-		String password = client.encrypt("KDE", "1", "110000001804");
+		String password = client.encrypt("KDE", "123456", "110000001804");
 		System.out.println(password);
 		
 		t.params.add("Z");
@@ -48,8 +48,8 @@ public class TradeClientTest{
 		t.params.add(password);
 
 		 
-		Response res = client.trade(t);
-		System.out.println(res.toString());
+		//Response res = client.trade(t);
+		//System.out.println(res.toString());
 		
 		client.destroy();
 	} 
