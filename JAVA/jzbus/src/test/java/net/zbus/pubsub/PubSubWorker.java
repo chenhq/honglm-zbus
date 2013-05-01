@@ -11,12 +11,13 @@ public class PubSubWorker {
 	public static void main(String[] args) { 
 		WorkerConfig workerCfg = new WorkerConfig();
 		workerCfg.setService("pubsub");
-		workerCfg.setMode(WorkerConfig.MODE_BC);
+		workerCfg.setMode(WorkerConfig.MODE_PUBSUB);
 		
 		ConnectionConfig connCfg = new ConnectionConfig();
 		Connection connection = new Connection(connCfg);
 		
 		Worker worker = new Worker(connection, workerCfg);
+		worker.subscribe("topic1");
 		
 		while(true){
 			try{
