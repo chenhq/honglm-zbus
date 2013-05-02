@@ -16,7 +16,7 @@ public class ClientExample {
 		 
         ZBusWebService zbus = service.getPort(ZBusWebService.class);
         
-        String[] res = zbus.callService("echo", "", "中文测试");
+        String[] res = zbus.callService("echo", "", "中文");
         for(String x : res){ 
         	System.out.println(x);
         	
