@@ -1,13 +1,9 @@
 package net.zbus.ws;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.xml.namespace.QName;
 import javax.xml.ws.Service;
-
-import com.alibaba.fastjson.JSON;
 
 public class ClientExample { 
 	
@@ -19,17 +15,11 @@ public class ClientExample {
 		Service service = Service.create(url, qname);
 		 
         ZBusWebService zbus = service.getPort(ZBusWebService.class);
-  
-        Map<String,String> params = new HashMap<String, String>();
-		params.put("557", "9999,0001,");
-		params.put("988", "1"); 
-		params.put("9110", "200"); 
-		
-        String[] res = zbus.callService("APEX", "", "302201", JSON.toJSONString(params));
-        if(res != null){
-        	for(String part : res){ 
-        		System.out.println(part);
-        	}
-        }
+        
+        String[] res = zbus.callService("echo", "", "中文测试");
+        for(String x : res){ 
+        	System.out.println(x);
+        	
+        } 
 	} 
 }

@@ -13,4 +13,10 @@ public interface ZBusWebService {
 	
 	@WebMethod
 	String jsonService(String service, String token, String funcName, String jsonParams);
+	
+	@WebMethod
+	boolean pubService(String service, String token, String topic, String... params);
+	
+	@WebMethod
+	byte[][] call(String service, String token, byte[][] params);
 }
