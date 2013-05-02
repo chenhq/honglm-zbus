@@ -231,6 +231,8 @@ thread_recv(void* args){
 		char* params_json = zframe_strdup(params_frame);  
 		
 		HANDLE_SESSION sess = Fix_AllocateSession(apex_conn);
+		Fix_SetGYDM(sess, "99999998"); 
+		Fix_SetFBDM(sess, "9999");
 		Fix_CreateReq(sess, funcid);
 		
 		cJSON* json = cJSON_Parse(params_json);  
@@ -240,7 +242,7 @@ thread_recv(void* args){
 				long key = atol(param->string);
 				char* val = param->valuestring; 
 				if(!val) val = "";
-				char* val_utf8 = utf8_to_gbk(val);
+				char* val_utf8 = utf8_to_gbk(val); 
 				Fix_SetString(sess, key, val_utf8);
 				delete[] val_utf8;
 
@@ -274,7 +276,7 @@ thread_recv(void* args){
 					char key_str[32];
 					sprintf(key_str, "%d", key);
 					value_data[size] = '\0';
-					char* value_data_utf8 = gbk_to_utf8(value_data);
+					char* value_data_utf8 = gbk_to_utf8(value_data); 
 					cJSON_AddStringToObject(row, key_str, value_data_utf8); 
 					delete[] value_data_utf8;
 				}
@@ -291,7 +293,7 @@ thread_recv(void* args){
 		} else {
 			long code = Fix_GetCode(sess);
 			Fix_GetErrMsg(sess, msg_data, sizeof(msg_data));
-			zlog("WARN: KCXP failed(code=%d,msg=%s)\n", code, msg_data);
+			zlog("WARN: APEX failed(code=%d,msg=%s)\n", code, msg_data);
 
 			zmsg_t* reply = zmsg_new(); 
 			zmsg_push_back(reply, zframe_newstr("500"));
