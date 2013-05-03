@@ -1,1 +1,0 @@
-nohup $JAVA_HOME/bin/java -Dfile.encoding=utf-8 -cp "classes:lib/*" com.guosen.uis.proxy.ZBusUISProxy &
