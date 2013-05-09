@@ -14,7 +14,7 @@ public class ReqRepClient {
 		for (int i = 0; i < 1; i++) {
 			ZMsg msg = new ZMsg();
 			msg.pushBack("helloworld");
-			msg = client.request("helloworld", "", msg, 2500);
+			msg = client.request("echo", "", msg, 2500);
 			msg.dump();
 		}
 
