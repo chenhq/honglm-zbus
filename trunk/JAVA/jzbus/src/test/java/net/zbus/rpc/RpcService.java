@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import net.zbus.ServiceHandler;
+import net.zbus.Worker;
 import net.zbus.WorkerPool;
 import net.zbus.WorkerPoolConfig;
 
@@ -53,17 +54,20 @@ class MyService {
 }
 
 public class RpcService {
-	public static void main(String[] args) {
-		MyService service = new MyService();
+	public static void main(String[] args) { 
+		//1) 配置服务信息
+		WorkerPoolConfig cfg = new WorkerPoolConfig();
+		cfg.setService("MyRPC");
+		cfg.setMode(Worker.MODE_LB);
+		cfg.setBrokers(new String[]{"127.0.0.1:15555","42.120.17.176:15555"}); //总线地址（多总线注册）
 		
-		WorkerPoolConfig config = new WorkerPoolConfig();
-		config.setService("rpc");
-		//config.setBrokers(new String[]{"localhost:15555"});
+		int threadCount = 2;
+		WorkerPool wc = new WorkerPool(cfg); 
+		System.out.format("Pooled RPC(%d) Run...\n", threadCount);
 		
-		ServiceHandler handler = new JsonServiceHandler(service);
+		//2)以指定的线程数运行RPC实例
+		ServiceHandler handler = new JsonServiceHandler(new MyService());
+		wc.run(threadCount, handler);
 		
-		WorkerPool pool = new WorkerPool(config); 
-		
-		pool.run(2, handler);
 	}
 }

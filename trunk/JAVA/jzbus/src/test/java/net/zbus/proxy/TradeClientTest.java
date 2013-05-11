@@ -1,7 +1,6 @@
 package net.zbus.proxy;
 
 import net.zbus.proxy.trade.Request;
-import net.zbus.proxy.trade.Response;
 import net.zbus.proxy.trade.TradeClient;
 import net.zbus.proxy.trade.TradeConfig;
 
