@@ -112,6 +112,19 @@ public class BusClient {
 		return false;
 	}
 	
+	public boolean broadcast(String service, String token, ZMsg message, int timeout){
+		AsynCtrl ctrl = new AsynCtrl();
+		ctrl.setService(service);
+		ctrl.setToken(token);
+		ctrl.setTimeout(timeout);
+		 
+		ZMsg res = this.send(ctrl, message);
+		String status = res.popFrontStr();
+		if(status != null && status.equals("200")){
+			return true;
+		}
+		return false;
+	}	
 	/**
 	 * 
 	 * @param probeInterval should be at least 1000(ms), otherwise, it will default to minimum value 1000

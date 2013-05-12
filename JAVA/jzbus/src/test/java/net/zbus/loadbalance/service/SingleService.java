@@ -15,7 +15,7 @@ public class SingleService {
 		connCfg.setPort(15555);
 		Connection conn = new Connection(connCfg);
 		
-		//2) 注册服务（Service1）
+		//2) 注册服务（MyService）
 		WorkerConfig workerCfg = new WorkerConfig();
 		workerCfg.setService("MyService");
 		workerCfg.setMode(Worker.MODE_LB); //负载均衡模式
