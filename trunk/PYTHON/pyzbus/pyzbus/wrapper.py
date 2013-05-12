@@ -163,6 +163,26 @@ class BusClient(object):
             msg.append(str(frame))
         return _pyzbus.zbuscli_request(self.connection.handle, service, token, msg, timeout)
 
+  
+    def publish(self, service, token, topic, message, timeout=2500):
+        ctrl = AsynCtrl(service=service, token=token, timeout=2500)
+        if not isinstance(message, (list, tuple)):
+            message = [message]
+        message.insert(0, topic)
+        res = self.send(ctrl, message) 
+        if len(res)>0 and res[0] == '200': 
+            return True
+        return False
+    
+    def broadcast(self, service, token, message, timeout=2500):
+        ctrl = AsynCtrl(service=service, token=token, timeout=2500)
+        if not isinstance(message, (list, tuple)):
+            message = [message] 
+        res = self.send(ctrl, message) 
+        if len(res)>0 and res[0] == '200': 
+            return True
+        return False
+
     def send(self, asyn_ctrl, message):
         assert isinstance(asyn_ctrl, AsynCtrl) 
         if not isinstance(message, (list, tuple)):
@@ -173,17 +193,7 @@ class BusClient(object):
         return _pyzbus.zbuscli_send(conn=self.connection.handle, service=asyn_ctrl.service, 
                                     token=asyn_ctrl.token, peer_id=asyn_ctrl.peer_id, 
                                     msg_id=str(asyn_ctrl.msg_id),msg = msg, timeout=asyn_ctrl.timeout)
-
-    def publish(self, service, token, topic, message, timeout=2500):
-        ctrl = AsynCtrl(service=service, token=token, timeout=2500)
-        if not isinstance(message, (list, tuple)):
-            message = [message]
-        message.insert(0, topic)
-        res = self.send(ctrl, message) 
-        if len(res)>0 and res[0] == '200': 
-            return True
-        return False
-        
+      
     def recv(self, probe_interval):
         return _pyzbus.zbuscli_recv(self.connection.handle, probe_interval)
     
