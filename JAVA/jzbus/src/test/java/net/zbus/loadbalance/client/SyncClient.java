@@ -19,7 +19,7 @@ public class SyncClient {
 		request.pushBack(new byte[10]); //消息帧2 -- 二进制串
 		
 		//3) 向ZBUS总线发送请求
-		ZMsg result = client.request("Service1"/*服务标识*/, ""/*安全码*/, request, 2500/*超时时间（ms）*/);
+		ZMsg result = client.request("MyService"/*服务标识*/, ""/*安全码*/, request, 2500/*超时时间（ms）*/);
 		result.dump();
 		
 		//4) 销毁客户端

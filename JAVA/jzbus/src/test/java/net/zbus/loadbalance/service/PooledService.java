@@ -11,7 +11,7 @@ public class PooledService {
 	public static void main(String[] args) {
 		//1) 配置服务信息
 		WorkerPoolConfig cfg = new WorkerPoolConfig();
-		cfg.setService("PooledService1");
+		cfg.setService("MyService");
 		cfg.setMode(Worker.MODE_LB);
 		cfg.setBrokers(new String[]{"127.0.0.1:15555","42.120.17.176:15555"}); //总线地址（多总线注册）
 		
