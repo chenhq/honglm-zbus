@@ -10,3 +10,4 @@
 3.3.3 -- add back 32bit linux support
 
 3.5.0 -- support publish/subscribe(any number of topics)
+3.5.2 -- support broadcast
