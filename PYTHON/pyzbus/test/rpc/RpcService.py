@@ -15,6 +15,6 @@ class MyService(object):
     def plus(self, a, b):
         return a + b 
 
-handler = JsonServiceHandler(MyService())
-pool = WorkerPool(service = 'rpc')
-pool.run(2, handler)
+pool = WorkerPool(service = 'MyRpc', broker=['127.0.0.1:15555'])
+print 'Python Rpc running...'
+pool.run(2, JsonServiceHandler(MyService()))
