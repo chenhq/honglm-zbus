@@ -17,11 +17,11 @@ public class SingleService {
 		
 		//2) 注册服务（Service1）
 		WorkerConfig workerCfg = new WorkerConfig();
-		workerCfg.setService("MyService1");
+		workerCfg.setService("MyService");
 		workerCfg.setMode(Worker.MODE_LB); //负载均衡模式
 		Worker worker = new Worker(conn, workerCfg);
 		
-		System.out.format("Simple Worker Running...\n");
+		System.out.format("Java Simple Worker Running...\n");
 		
 		//3) 服务业务逻辑循环体（等待ZBUS总线分发请求，处理请求，返回请求结果）
 		while(true){

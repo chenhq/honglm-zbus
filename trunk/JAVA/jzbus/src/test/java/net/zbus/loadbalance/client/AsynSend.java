@@ -17,8 +17,8 @@ public class AsynSend {
 		
 		//2) 异步控制结构
 		AsynCtrl ctrl = new AsynCtrl();
-		ctrl.setService("MyService1");
-		ctrl.setMessageId("MSG_ID_"+System.currentTimeMillis()); //本条消息ID，用于异步消息标识
+		ctrl.setService("MyService");
+		ctrl.setMessageId("MSG_"+System.currentTimeMillis()); //本条消息ID，用于异步消息标识
 		ctrl.setPeerId("local_mq"); //消息投递目标ID，与接收方协商
 		ctrl.setTimeout(2500); //异步投递失败提示最长时间
 		
