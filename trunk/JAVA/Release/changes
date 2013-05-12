@@ -1,0 +1,13 @@
+3.2.1 -- fixed ZMsg NullPointException
+3.2.2 -- ZContext load dynamic lib failed to print message
+      -- sychronize getInstance
+      -- add java json null value support
+      
+3.3.0 -- refined for Asynchronise API, not compatible to 3.2.x
+3.3.1 -- BusClient add monitor and publish API
+	  -- support 32bit linux
+3.3.2 -- merge jzbus-proxy to jzbus
+3.3.3 -- add back 32bit linux support
+
+3.5.0 -- support publish/subscribe(any number of topics)
+3.5.2 -- support broadcast
