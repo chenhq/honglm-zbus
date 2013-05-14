@@ -17,6 +17,7 @@ public class SyncClient {
 		ZMsg request = new ZMsg();
 		request.pushBack("Frame1");     //消息帧1 -- 字符类型
 		request.pushBack(new byte[10]); //消息帧2 -- 二进制串
+		request.pushBack("request from JAVA"); //消息帧3 -- 字符类型
 		
 		//3) 向ZBUS总线发送请求
 		ZMsg result = client.request("MyService"/*服务标识*/, ""/*安全码*/, request, 2500/*超时时间（ms）*/);

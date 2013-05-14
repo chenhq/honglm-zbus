@@ -14,6 +14,7 @@ public class RpcClient {
 		int res = (Integer)rpc.invoke("plus", 23441, 22);
 		System.out.println(res);
 		
+		//3) 销毁链接
 		rpc.destroy(); 
 	}
 }
