@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "asyn_send", "asyn_send.vcproj", "{924DBE12-B048-47EC-AB3F-31D03DE54668}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{924DBE12-B048-47EC-AB3F-31D03DE54668}.Debug|Win32.ActiveCfg = Debug|Win32
+		{924DBE12-B048-47EC-AB3F-31D03DE54668}.Debug|Win32.Build.0 = Debug|Win32
+		{924DBE12-B048-47EC-AB3F-31D03DE54668}.Release|Win32.ActiveCfg = Release|Win32
+		{924DBE12-B048-47EC-AB3F-31D03DE54668}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
