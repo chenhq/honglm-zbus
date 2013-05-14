@@ -1,3 +1,5 @@
 eclipse.preferences.version=1
-encoding//test/rpc/rpc_client.py=utf-8
-encoding//test/rpc/rpc_worker.py=utf-8
+encoding//test/loadbalance/client/AsynRecv.py=utf8
+encoding//test/rpc/RpcClient.py=utf-8
+encoding//test/rpc/RpcService.py=utf-8
+encoding/<project>=UTF-8
