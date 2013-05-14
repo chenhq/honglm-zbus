@@ -81,6 +81,10 @@ namespace zbus {
         [DllImport("libzbus", CallingConvention = PlatformConvention)]
         public static extern IntPtr zbuswrk_recv(IntPtr conn, IntPtr worker);
         [DllImport("libzbus", CallingConvention = PlatformConvention)]
+        public static extern int zbuswrk_subscribe(IntPtr conn, IntPtr worker, [MarshalAs(UnmanagedType.LPStr)] string topic);
+        [DllImport("libzbus", CallingConvention = PlatformConvention)]
+        public static extern int zbuswrk_unsubscribe(IntPtr conn, IntPtr worker, [MarshalAs(UnmanagedType.LPStr)] string topic);
+        [DllImport("libzbus", CallingConvention = PlatformConvention)]
         public static extern IntPtr zbuswrk_get_address(IntPtr worker, out IntPtr sock_id, out IntPtr msg_id);
         [DllImport("libzbus", CallingConvention = PlatformConvention)]
         public static extern IntPtr zbuswrk_set_address(IntPtr worker, IntPtr sock_id, IntPtr msg_id);

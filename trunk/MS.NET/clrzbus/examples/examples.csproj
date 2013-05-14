@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{EDAA74DC-3EAE-4FF6-87A0-39D26398C8E8}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -49,28 +49,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>zbus.ReqRepClient</StartupObject>
+    <StartupObject>zbus.AsynRecv</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="asyn\ClientSend.cs" />
-    <Compile Include="asyn\ClientRecv.cs" />
-    <Compile Include="pool\PoolWorker.cs" />
+    <Compile Include="loadbalance\client\AsynSend.cs" />
+    <Compile Include="loadbalance\client\AsynRecv.cs" />
+    <Compile Include="loadbalance\service\PooledService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="pubsub\Subscriber.cs" />
     <Compile Include="pubsub\Publisher.cs" />
-    <Compile Include="reqrep\ReqRepClient.cs" />
-    <Compile Include="reqrep\ReqRepWorker.cs" />
+    <Compile Include="loadbalance\client\SyncClient.cs" />
+    <Compile Include="loadbalance\service\SingleService.cs" />
     <Compile Include="rpc\RpcClient.cs" />
-    <Compile Include="rpc\RpcWorker.cs" />
+    <Compile Include="rpc\RpcService.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\clrzbus.csproj">
@@ -100,6 +99,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

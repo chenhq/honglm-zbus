@@ -167,12 +167,14 @@ namespace zbus
             return result;
         }
 
-        public bool Publish(string service, string token, ZMsg msg, int timeout=2500)
+        public bool Publish(string service, string token, string topic, ZMsg msg, int timeout=2500)
         {
             AsynCtrl ctrl = new AsynCtrl();
             ctrl.Service = service;
             ctrl.Token = token;
             ctrl.Timeout = timeout;
+
+            msg.PushFront(topic);
 
             ZMsg res = this.Send(ctrl, msg);
             string status = res.PopFrontStr();
