@@ -7,6 +7,7 @@ namespace zbus {
     public class WorkerConfig
     {
         public static readonly string MODE_LB = "1";
+        public static readonly string MODE_PUBSUB = "2";
         public static readonly string MODE_BC = "3";
 
         public string Service;// required
@@ -34,7 +35,8 @@ namespace zbus {
             {
                 throw new ZBusException("WorkerConfig, missing service");
             }
-            if (config.Mode != WorkerConfig.MODE_LB && config.Mode != WorkerConfig.MODE_BC)
+            if (config.Mode != WorkerConfig.MODE_LB && config.Mode != WorkerConfig.MODE_BC
+                && config.Mode != WorkerConfig.MODE_PUBSUB)
             {
                 throw new ZBusException("worker mode wrong");
             }
@@ -83,6 +85,16 @@ namespace zbus {
             C.zbuswrk_set_address(this._handle, c_sock_id, c_msg_id);
 
             return C.zbuswrk_send(this.connection.Handle, this._handle, c_msg);
+        }
+
+        public int Subscribe(string topic)
+        {
+            return C.zbuswrk_subscribe(this.connection.Handle, this._handle, topic);
+        }
+
+        public int unsubscribe(string topic)
+        {
+            return C.zbuswrk_unsubscribe(this.connection.Handle, this._handle, topic);
         }
 
         ~Worker()
@@ -173,6 +185,7 @@ namespace zbus {
 
     public class WorkerPoolConfig { 
 	    public static readonly String MODE_LB = "1";
+        public static readonly string MODE_PUBSUB = "2";
         public static readonly String MODE_BC = "3";
 	
 	    //Connection config 

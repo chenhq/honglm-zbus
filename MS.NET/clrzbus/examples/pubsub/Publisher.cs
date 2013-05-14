@@ -5,7 +5,7 @@ using System.Text;
 using zbus;
 namespace zbus
 {
-    class PubSubClient
+    class Publisher
     {
         public static void Main(string[] args)
         {
@@ -17,9 +17,11 @@ namespace zbus
             BusClient client = new BusClient(config);
             
             ZMsg msg = new ZMsg();
-            msg.PushBack("C# publish");
+            msg.PushBack("publish from C#");
 
-            client.Publish("pubsub", "", msg);
+            bool result = client.Publish("MyPubSub", "", "topic1", msg);
+           
+            Console.WriteLine("publish result: "+result);
 
             client.Destroy();
 
