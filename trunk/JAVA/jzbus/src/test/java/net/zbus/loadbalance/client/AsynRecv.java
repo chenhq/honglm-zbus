@@ -1,18 +1,26 @@
 package net.zbus.loadbalance.client;
 
 import net.zbus.BusClient;
+import net.zbus.BusClientFactory;
 import net.zbus.ConnectionConfig;
+import net.zbus.Pool;
+import net.zbus.PoolConfig;
 import net.zbus.ZMsg;
 
 public class AsynRecv {
 
 	public static void main(String[] args) {
 		//1) 创建连接
-		ConnectionConfig config = new ConnectionConfig(); 
-		config.setHost("127.0.0.1");
-		config.setPort(15555);
-		config.setId("local_mq"); //指定PeerID，与发送方协商
-		BusClient client = new BusClient(config); 
+		ConnectionConfig connCfg = new ConnectionConfig();
+		connCfg.setHost("127.0.0.1");
+		connCfg.setPort(15555); 
+		BusClientFactory factory = new BusClientFactory(connCfg);
+		
+		PoolConfig config = new PoolConfig(); 
+		config.setMaxActive(2); 
+		Pool<BusClient> pool = new Pool<BusClient>(factory, config);
+		
+		BusClient client = pool.borrowResource();
 
 		//2） 异步处理消息
 		while (true) {
@@ -26,8 +34,9 @@ public class AsynRecv {
 			}
 		}
 		
-		//3)销毁连接
-		client.destroy();
+		//3)返回链接
+		pool.returnResource(client);
+		pool.destroy();
 	}
 
 }

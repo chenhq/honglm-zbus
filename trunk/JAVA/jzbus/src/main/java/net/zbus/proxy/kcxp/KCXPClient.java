@@ -12,7 +12,7 @@ import net.zbus.ZMsg;
 public class KCXPClient extends BusClient {  
 	private KCXPConfig config;
 
-	public KCXPClient(KCXPConfig config) {
+	protected KCXPClient(KCXPConfig config) {
 		super(config);
 		this.config = config;
 	}

@@ -10,7 +10,7 @@ import net.zbus.WorkerPoolConfig;
 
 
 class MyService {
-	@Remote()
+	@Remote() //注解用于JAVA反射为方法名到方法实例的映射关系，API内部完成，应用透明
 	public String echo(String ping) {
 		return ping;
 	}
@@ -68,6 +68,5 @@ public class RpcService {
 		//2)以指定的线程数运行RPC实例
 		ServiceHandler handler = new JsonServiceHandler(new MyService());
 		wc.run(threadCount, handler);
-		
 	}
 }

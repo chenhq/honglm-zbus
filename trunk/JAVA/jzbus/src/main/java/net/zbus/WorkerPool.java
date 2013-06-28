@@ -59,7 +59,7 @@ class WorkerThread extends Thread{
 	
 	@Override
 	public void run() { 
-		Connection connection = new Connection(this.connectionConfig);
+		SafeConnection connection = new SafeConnection(this.connectionConfig);
 		Worker worker = new Worker(connection, workerConfig);
 		if(handler instanceof ServiceHandler){
 			ServiceHandler serviceHandler = (ServiceHandler)handler;

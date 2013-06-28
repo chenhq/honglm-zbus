@@ -3,7 +3,10 @@ package net.zbus.proxy;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.zbus.Pool;
+import net.zbus.PoolConfig;
 import net.zbus.proxy.tc.TCClient;
+import net.zbus.proxy.tc.TCClientFactory;
 import net.zbus.proxy.tc.TCConfig;
 import net.zbus.proxy.tc.TCResult;
 
@@ -13,8 +16,13 @@ public class TCClientTest{
 		TCConfig config = new TCConfig(); 
 		config.setService("ETC-172.24.180.71"); 
 		config.setVerbose(true);
+		TCClientFactory factory = new TCClientFactory(config);
 		
-		TCClient client = new TCClient(config); 
+		PoolConfig poolCfg = new PoolConfig(); 
+		poolCfg.setMaxActive(2); 
+		Pool<TCClient> pool = new Pool<TCClient>(factory, poolCfg);
+		
+		TCClient client = pool.borrowResource();
 
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("comb_id", "815");
@@ -22,15 +30,21 @@ public class TCClientTest{
 	    
 	    res.dump();
 
-		client.destroy();
+		pool.returnResource(client);
+		pool.destroy();
 	}
 	public static void main(String[] args) throws Exception {
 		TCConfig config = new TCConfig(); 
-		config.setService("ETC-172.24.180.71");
-		//config.setHost("172.24.180.27"); 
+		config.setService("ETC-172.24.180.71"); 
+		config.setVerbose(true);
+		TCClientFactory factory = new TCClientFactory(config);
 		
-		TCClient client = new TCClient(config); 
-
+		PoolConfig poolCfg = new PoolConfig(); 
+		poolCfg.setMaxActive(2); 
+		Pool<TCClient> pool = new Pool<TCClient>(factory, poolCfg);
+		
+		TCClient client = pool.borrowResource();
+		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("sendtime_type", "1");
 		params.put("send_type", "1");
@@ -66,6 +80,7 @@ public class TCClientTest{
 
 		res.dump();
 
-		client.destroy();
+		pool.returnResource(client);
+		pool.destroy();
 	}
 }

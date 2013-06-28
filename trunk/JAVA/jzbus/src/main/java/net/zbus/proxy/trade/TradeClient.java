@@ -9,7 +9,7 @@ import net.zbus.ZMsg;
 public class TradeClient extends BusClient{ 
 	private TradeConfig config;
 	
-	public TradeClient(TradeConfig config) {
+	protected TradeClient(TradeConfig config) {
 		super(config); 
 		this.config = config;
 	}

@@ -9,7 +9,7 @@ import net.zbus.ZMsg;
 
 public class TCClient extends BusClient { 
 	private TCConfig config;
-	public TCClient(TCConfig config) {
+	protected TCClient(TCConfig config) {
 		super(config);
 		this.config = config;
 	}

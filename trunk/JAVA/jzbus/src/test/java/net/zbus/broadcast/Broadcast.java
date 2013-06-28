@@ -1,17 +1,27 @@
 package net.zbus.broadcast;
 
 import net.zbus.BusClient;
+import net.zbus.BusClientFactory;
 import net.zbus.ConnectionConfig;
+import net.zbus.Pool;
+import net.zbus.PoolConfig;
 import net.zbus.ZMsg;
 
 public class Broadcast {
 
 	public static void main(String[] args) {
 		//1) 创建连接
-		ConnectionConfig config = new ConnectionConfig(); 
-		config.setHost("127.0.0.1");
-		config.setPort(15555);
-		BusClient client = new BusClient(config);
+		ConnectionConfig connCfg = new ConnectionConfig();
+		connCfg.setHost("127.0.0.1");
+		connCfg.setPort(15555); 
+		BusClientFactory factory = new BusClientFactory(connCfg);
+		
+		
+		PoolConfig config = new PoolConfig(); 
+		config.setMaxActive(2); 
+		Pool<BusClient> pool = new Pool<BusClient>(factory, config);
+		
+		BusClient client = pool.borrowResource();  
 		
 		//2) 组装消息（消息帧数组）
 		ZMsg request = new ZMsg();
@@ -22,8 +32,10 @@ public class Broadcast {
 		boolean res = client.broadcast("MyBroadcast"/*服务标识*/, ""/*安全码*/, request, 2500/*超时时间（ms）*/);
 		System.out.println("broadcast result: "+res);
 		
-		//4) 销毁客户端
-		client.destroy();
+		//4) 销毁客户端 
+		pool.returnResource(client);
+				
+		pool.destroy();
 	}
 
 }
