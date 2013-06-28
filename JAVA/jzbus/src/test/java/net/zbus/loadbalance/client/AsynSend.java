@@ -2,17 +2,27 @@ package net.zbus.loadbalance.client;
 
 import net.zbus.AsynCtrl;
 import net.zbus.BusClient;
+import net.zbus.BusClientFactory;
 import net.zbus.ConnectionConfig;
+import net.zbus.Pool;
+import net.zbus.PoolConfig;
 import net.zbus.ZMsg;
 
 public class AsynSend {
  
 	public static void main(String[] args) { 
 		//1) 创建连接
-		ConnectionConfig config = new ConnectionConfig(); 
-		config.setHost("127.0.0.1");
-		config.setPort(15555);
-		BusClient client = new BusClient(config);
+		ConnectionConfig connCfg = new ConnectionConfig();
+		connCfg.setHost("127.0.0.1");
+		connCfg.setPort(15555); 
+		BusClientFactory factory = new BusClientFactory(connCfg);
+		
+		
+		PoolConfig config = new PoolConfig(); 
+		config.setMaxActive(2); 
+		Pool<BusClient> pool = new Pool<BusClient>(factory, config);
+		
+		BusClient client = pool.borrowResource();
 		
 		
 		//2) 异步控制结构
@@ -31,7 +41,9 @@ public class AsynSend {
 		ZMsg res = client.send(ctrl, msg);
 		res.dump();
 		
-		//5）销毁链接
-		client.destroy();
+		//5）返回链接
+		pool.returnResource(client);
+		pool.destroy();
+		
 	} 
 }

@@ -5,7 +5,7 @@ public class Worker {
 	public static final String MODE_PUBSUB = "2";
 	public static final String MODE_BC = "3";
 	
-	private Connection connection; 
+	private SafeConnection connection; 
 	
 	private final String service;
 	private final String mode;
@@ -16,7 +16,7 @@ public class Worker {
 	public byte[] recvSockId;
 	
 
-	public Worker(Connection connection, WorkerConfig config){
+	public Worker(SafeConnection connection, WorkerConfig config){
 		this.connection = connection; 
 		this.service = config.getService();
 		this.mode = config.getMode();

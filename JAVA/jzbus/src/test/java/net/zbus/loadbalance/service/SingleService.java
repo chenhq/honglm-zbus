@@ -1,6 +1,6 @@
 package net.zbus.loadbalance.service;
 
-import net.zbus.Connection;
+import net.zbus.SafeConnection;
 import net.zbus.ConnectionConfig;
 import net.zbus.Worker;
 import net.zbus.WorkerConfig;
@@ -13,7 +13,7 @@ public class SingleService {
 		ConnectionConfig connCfg = new ConnectionConfig();  
 		connCfg.setHost("127.0.0.1");
 		connCfg.setPort(15555);
-		Connection conn = new Connection(connCfg);
+		SafeConnection conn = new SafeConnection(connCfg);
 		
 		//2) 注册服务（MyService）
 		WorkerConfig workerCfg = new WorkerConfig();

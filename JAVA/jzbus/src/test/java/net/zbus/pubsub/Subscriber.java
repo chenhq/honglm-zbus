@@ -1,6 +1,6 @@
 package net.zbus.pubsub;
 
-import net.zbus.Connection;
+import net.zbus.SafeConnection;
 import net.zbus.ConnectionConfig;
 import net.zbus.Worker;
 import net.zbus.WorkerConfig;
@@ -11,7 +11,7 @@ public class Subscriber {
 	public static void main(String[] args) { 
 		//1) 创建连接到ZBUS总线
 		ConnectionConfig connCfg = new ConnectionConfig();
-		Connection connection = new Connection(connCfg);
+		SafeConnection connection = new SafeConnection(connCfg);
 	
 		//2) 注册发布订阅服务（MyPubSub）
 		WorkerConfig workerCfg = new WorkerConfig();

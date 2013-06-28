@@ -46,28 +46,21 @@ package net.zbus;
  
 
 public class BusClient { 
-	private Connection connection;
-	private boolean ownConnection;
-	
-	public BusClient(Connection connection){
-		this.connection = connection;
-		this.ownConnection = false;
+	private ConnectionUnsafe connection;  
+	 
+	protected BusClient(ConnectionConfig config){ 
+		this.connection = new ConnectionUnsafe(config); 
 	}
 	
-	public BusClient(ConnectionConfig config){
-		this.connection = new Connection(config);
-		this.ownConnection = true;
-	}
 	
 	public ZMsg request(String service, String token, ZMsg message, int timeout){
-		ConnectionUnsafe conn = this.connection.get();
 		int frames = message.frameSize();
 		byte[][] req = new byte[frames][];
 		for(int i=0;i<frames;i++){
 			req[i] = message.popFront();
 		}
 		
-		byte[][] res = conn.zbuscli_request(service, token, req, timeout);
+		byte[][] res = this.connection.zbuscli_request(service, token, req, timeout);
 		
 		ZMsg result = new ZMsg();
 		if(res != null){
@@ -78,15 +71,14 @@ public class BusClient {
 		return result;
 	}
 	
-	public ZMsg send(AsynCtrl ctrl, ZMsg message){
-		ConnectionUnsafe conn = this.connection.get();
+	public ZMsg send(AsynCtrl ctrl, ZMsg message){ 
 		int frames = message.frameSize();
 		byte[][] req = new byte[frames][];
 		for(int i=0;i<frames;i++){
 			req[i] = message.popFront();
 		}
 		
-		byte[][] res = conn.zbuscli_send(ctrl, req);
+		byte[][] res = connection.zbuscli_send(ctrl, req);
 		
 		ZMsg result = new ZMsg();
 		if(res != null){
@@ -130,9 +122,8 @@ public class BusClient {
 	 * @param probeInterval should be at least 1000(ms), otherwise, it will default to minimum value 1000
 	 * @return
 	 */
-	public ZMsg recv(int probeInterval){
-		ConnectionUnsafe conn = this.connection.get();
-		byte[][] res = conn.zbuscli_recv(probeInterval);
+	public ZMsg recv(int probeInterval){ 
+		byte[][] res = connection.zbuscli_recv(probeInterval);
 		
 		ZMsg result = new ZMsg();
 		if(res != null){
@@ -144,15 +135,14 @@ public class BusClient {
 	}
 	
 	
-	public ZMsg monitor(String token, ZMsg message, int timeout){
-		ConnectionUnsafe conn = this.connection.get();
+	public ZMsg monitor(String token, ZMsg message, int timeout){ 
 		int frames = message.frameSize();
 		byte[][] req = new byte[frames][];
 		for(int i=0;i<frames;i++){
 			req[i] = message.popFront();
 		}
 		
-		byte[][] res = conn.zbusmon_request(token, req, timeout);
+		byte[][] res = connection.zbusmon_request(token, req, timeout);
 		
 		ZMsg result = new ZMsg();
 		if(res != null){
@@ -163,9 +153,11 @@ public class BusClient {
 		return result;
 	}
 	
-	
+	public int probe(int timeout){
+		return this.connection.zbusconn_probe(timeout);
+	}
 	public void destroy(){ 
-		if(this.ownConnection && this.connection != null){
+		if(this.connection != null){
 			this.connection.destroy();
 			this.connection = null;
 		}

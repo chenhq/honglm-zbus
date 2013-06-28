@@ -33,30 +33,18 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 
-public class Rpc { 
-	 private BusClient client; 
-	 private boolean ownClient = false;
+public class Rpc extends BusClient {   
 	 private String service; 
 	 private String token = "";  
 	 private Charset encoding;
 	 private int timeout = 2500;//ms
 	 
-	 public Rpc(RpcConfig config){
+	 protected Rpc(RpcConfig config){
+		 super(config);
 		 this.service = config.getService();
 		 this.token = config.getToken();
 		 this.encoding = Charset.forName(config.getEncoding());
-		 this.timeout = config.getTimeout();
-		 
-		 this.client = new BusClient(config);
-		 this.ownClient = true;
-	 }
-	 
-	 public Rpc(BusClient client, String service){ 
-		 this.service = service; 
-		 this.encoding = Charset.forName(RpcConfig.ENCODING_UTF8);
-		 
-		 this.client = client; 
-		 this.ownClient = false;
+		 this.timeout = config.getTimeout(); 
 	 }
 	 
 	 public Object invoke(String method, Object... args){
@@ -67,7 +55,7 @@ public class Rpc {
 		 req.put("params", args);
 		 ZMsg msg = new ZMsg();
 		 msg.pushBack(JSON.toJSONBytes(req, SerializerFeature.WriteMapNullValue));
-		 msg = this.client.request(this.service, this.token, msg, this.timeout); 
+		 msg = this.request(this.service, this.token, msg, this.timeout); 
 		 if(msg == null){
 			 throw new ZBusException("json rpc request timeout");
 		 }
@@ -91,12 +79,5 @@ public class Rpc {
 		 }else{
 			 throw new ZBusException(msg.popFrontStr());
 		 } 
-	 }
-	 
-	 
-	 public void destroy(){
-		 if(this.client != null && this.ownClient){
-			 this.client.destroy();
-		 }
 	 }
 }
